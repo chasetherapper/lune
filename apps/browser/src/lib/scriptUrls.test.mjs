@@ -34,6 +34,11 @@ test("script-capable data: and view-source: URLs are caught", () => {
     "view-source:data:text/html,<script>alert(1)</script>",
     "VIEW-SOURCE:JAVASCRIPT:alert(1)",
     "view-source:view-source:javascript:alert(1)",
+    "view-source: javascript:alert(1)",
+    "view-source: view-source: javascript:alert(1)",
+    "data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>",
+    "DATA:IMAGE/SVG+XML,<svg><script>alert(1)</script></svg>",
+    "view-source:data:image/svg+xml,<svg><script>alert(1)</script></svg>",
     "  data:text/html,<script>alert(1)</script>",
   ]) assert.equal(runsJavaScript(url, DEFAULT_SETTINGS), true, JSON.stringify(url));
 });

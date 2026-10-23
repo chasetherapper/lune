@@ -1,7 +1,7 @@
 import { engineInfo } from "@ardia/ardiacore";
 import { launchEnvironment, readDocument, systemInfo, writeDocument, type SystemInfo } from "@ardia/shell";
 import { create } from "zustand";
-import { DEV_SEND_ENV, LOGS_URL, MAX_BODY_BYTES } from "./config";
+import { DEV_SEND_ENV, LOGS_URL, MAX_BODY_BYTES, TELEMETRY_AVAILABLE } from "./config";
 import { EVENTS_SCOPE, eventRecord, LOGS_SCOPE, logRecord, logsRequest, outcome, type OtlpLogRecord, type QueuedEvent } from "./otlp";
 import { cleanProperties } from "./sanitize";
 
@@ -76,7 +76,7 @@ export const environment = (): "dev" | "test" | "production" =>
   __DEV__ ? "dev" : appInfo().isolatedInstance ? "test" : "production";
 
 const devSendAllowed = () => launchEnvironment(DEV_SEND_ENV) === "1";
-const canSend = () => !__DEV__ || devSendAllowed();
+const canSend = () => TELEMETRY_AVAILABLE && (!__DEV__ || devSendAllowed());
 
 function context(): Record<string, unknown> {
   const info = appInfo();
@@ -259,7 +259,7 @@ async function drain<T>(
       size = Math.ceil(batch.length / 2);
       continue;
     }
-    const status = await post(kind, LOGS_URL, body, batch.length);
+    const status = await post(kind, LOGS_URL ?? "", body, batch.length);
     if (gen !== generation) return "stale";
     const result = outcome(status, batch.length);
     if (result === "retry") return "failed";
@@ -296,6 +296,7 @@ export async function flush() {
 type SharingSource = "settings" | "onboarding" | "ask";
 
 export function setSharing(on: boolean, source: SharingSource) {
+  if (!TELEMETRY_AVAILABLE) on = false;
   const now = Date.now();
   if (on === saved.sharing) return save({ decidedAt: now, askDoneAt: saved.askDoneAt ?? now });
   generation++;
@@ -331,6 +332,7 @@ export function loadChoice() {
   if (loaded) return;
   loaded = true;
   saved = { ...DEFAULT, ...readJson<Partial<Saved>>(STATE_DOC) };
+  if (!TELEMETRY_AVAILABLE) saved = { ...saved, sharing: false, installId: null, decidedAt: saved.decidedAt ?? 0, askDoneAt: saved.askDoneAt ?? 0 };
   useTelemetry.setState({ sharing: saved.sharing, decided: saved.decidedAt !== null, askDone: saved.askDoneAt !== null });
 }
 

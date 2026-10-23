@@ -1,3 +1,5 @@
+import { TELEMETRY_AVAILABLE } from "../../telemetry/config";
+import { APP_NAME } from "../../lib/appName";
 import { prepare, type Searchable } from "./searchMatch";
 import type { SettingsPane } from "./windows";
 
@@ -21,7 +23,7 @@ export const PANES: { id: SettingsPane; title: string; icon: string }[] = [
 type Row = { title: string; description?: string; keywords?: string[] };
 type Section = { section: string; rows: Record<string, Row> };
 
-const APP = "Ardia";
+const APP = APP_NAME;
 
 const ROWS: Record<SettingsPane, Section[]> = {
   general: [
@@ -36,7 +38,7 @@ const ROWS: Record<SettingsPane, Section[]> = {
           description: "Asks before ⇧⌘W or the close button closes its tabs.",
           keywords: ["close window", "confirm"],
         },
-        openLinksFrom: { title: "Open links from other apps in", keywords: ["little ardia", "external links", "mini window", "discord", "slack", "mail"] },
+        openLinksFrom: { title: "Open links from other apps in", keywords: ["little lune", "external links", "mini window", "discord", "slack", "mail"] },
       },
     },
     {
@@ -193,13 +195,17 @@ const ROWS: Record<SettingsPane, Section[]> = {
       },
     },
     { section: "Apps allowed to open links", rows: { appLinks: { title: "Apps allowed to open links", description: "Sites that open another app without asking first.", keywords: ["external apps", "protocol handlers", "zoom links"] } } },
-    {
-      section: "Crash reports and usage",
-      rows: {
-        shareDiagnostics: { title: "Share anonymous crash reports and usage stats", keywords: ["telemetry", "analytics", "diagnostics", "crash"] },
-        whatsSent: { title: "What's Sent", description: "Every field, and what never leaves this Mac.", keywords: ["telemetry", "data collection"] },
-      },
-    },
+    ...(TELEMETRY_AVAILABLE
+      ? [
+          {
+            section: "Crash reports and usage",
+            rows: {
+              shareDiagnostics: { title: "Share anonymous crash reports and usage stats", keywords: ["telemetry", "analytics", "diagnostics", "crash"] },
+              whatsSent: { title: "What's Sent", description: "Every field, and what never leaves this Mac.", keywords: ["telemetry", "data collection"] },
+            },
+          },
+        ]
+      : []),
   ],
   passwords: [
     {
@@ -228,11 +234,11 @@ const ROWS: Record<SettingsPane, Section[]> = {
     { section: "Credit Cards", rows: { cardList: { title: "Credit Cards", keywords: ["add card", "saved cards", "payment"] } } },
   ],
   extensions: [
-    { section: "Extensions", rows: { installed: { title: "Extensions", description: "Add features to Ardia with extensions from the Chrome Web Store. Each profile has its own.", keywords: ["add ons", "plugins", "installed"] } } },
+    { section: "Extensions", rows: { installed: { title: "Extensions", description: `Add features to ${APP} with extensions from the Chrome Web Store. Each profile has its own.`, keywords: ["add ons", "plugins", "installed"] } } },
     {
       section: "Add extensions",
       rows: {
-        webStore: { title: "Chrome Web Store", description: "Browse the store; its Add to Ardia button installs here.", keywords: ["install extension"] },
+        webStore: { title: "Chrome Web Store", description: `Browse the store; its Add to ${APP} button installs here.`, keywords: ["install extension"] },
         addLink: { title: "Add from a link", description: "Paste a Chrome Web Store link or extension ID.", keywords: ["install extension", "url"] },
         unpacked: { title: "Load unpacked extension", description: "For developers: load an extension folder with a manifest.json.", keywords: ["developer mode"] },
       },
@@ -318,7 +324,7 @@ const ROWS: Record<SettingsPane, Section[]> = {
     {
       section: "Command line",
       rows: {
-        cliControl: { title: "Let the ardia command control Ardia", keywords: ["cli", "terminal", "devtools", "automation", "remote debugging"] },
+        cliControl: { title: `Let the ardia command control ${APP}`, keywords: ["cli", "terminal", "devtools", "automation", "remote debugging"] },
         cliInstall: { title: "The ardia command", keywords: ["cli", "terminal", "install"] },
       },
     },
@@ -332,7 +338,7 @@ const ROWS: Record<SettingsPane, Section[]> = {
     {
       section: "Source and licenses",
       rows: {
-        source: { title: "Source code", description: "Ardia is open source under the Apache License 2.0.", keywords: ["github", "open source"] },
+        source: { title: "Source code", description: `${APP} is open source under the GNU General Public License v3.`, keywords: ["github", "open source"] },
         licenses: { title: "Licenses", description: "Every open-source part of the engine, with its copyright and license.", keywords: ["credits", "legal"] },
       },
     },

@@ -1,3 +1,4 @@
+import { APP_NAME } from "./lib/appName";
 import { requireNativeModule, requireOptionalNativeModule } from "expo-modules-core";
 import { AppRegistry, Text, View } from "react-native";
 
@@ -26,7 +27,7 @@ export function startSkewed(message: string) {
       </Text>
     </View>
   ));
-  void requireNativeModule<Shell>("ArdiaShell").openWindow("native-api-skew", { kind: "settings", title: "Ardia", focus: false });
+  void requireNativeModule<Shell>("ArdiaShell").openWindow("native-api-skew", { kind: "settings", title: APP_NAME, focus: false });
   if (__DEV__) answerWithSkew(message, "dev-eval.js", "dev-eval-result.json");
 }
 

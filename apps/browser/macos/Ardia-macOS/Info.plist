@@ -5,9 +5,9 @@
 	<key>ACFeedbackEmail</key>
 	<string></string>
 	<key>ACFeedbackURL</key>
-	<string>https://github.com/mantrakp04/ardia/issues/new?body=%s</string>
+	<string>https://github.com/chasetherapper/lune/issues/new?body=%s</string>
 	<key>ACReleaseNotesURL</key>
-	<string>https://ardia.dev/release-notes</string>
+	<string></string>
 	<key>ACUpdateChannel</key>
 	<string>$(AC_UPDATE_CHANNEL)</string>
 	<key>ACVideoTourURL</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Ardia</string>
+	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -85,19 +85,19 @@
 		<true/>
 	</dict>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Ardia asks Dia for its profiles, open tabs and pinned tabs when you import them. It only reads them and changes nothing in Dia.</string>
+	<string>$(PRODUCT_NAME) asks Dia for its profiles, open tabs and pinned tabs when you import them. It only reads them and changes nothing in Dia.</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Signing in with a passkey from your phone uses Bluetooth, and websites may ask to use Bluetooth devices.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Ardia shows your upcoming meetings on pinned calendar tabs, alerts you before they start, and groups the tabs you open during a call.</string>
+	<string>$(PRODUCT_NAME) shows your upcoming meetings on pinned calendar tabs, alerts you before they start, and groups the tabs you open during a call.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Websites may ask to use your camera.</string>
 	<key>NSDockTilePlugIn</key>
 	<string>ArdiaDockTile.plugin</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Ardia finds Cast devices on your network so you can cast tabs to them.</string>
+	<string>$(PRODUCT_NAME) finds Cast devices on your network so you can cast tabs to them.</string>
 	<key>NSLocationUsageDescription</key>
 	<string>Websites may ask to use your location.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -115,13 +115,13 @@
 	<key>RCTNewArchEnabled</key>
 	<false/>
 	<key>SUAutomaticallyUpdate</key>
-	<true/>
+	<false/>
 	<key>SUEnableAutomaticChecks</key>
-	<true/>
+	<false/>
 	<key>SUFeedURL</key>
-	<string>https://ardia.dev/appcast.xml</string>
+	<string></string>
 	<key>SUPublicEDKey</key>
-	<string>gi1pBCemmSVpHM36dT5BJPPTcKC98QwS19mztCTyd4s=</string>
+	<string></string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>28800</integer>
 </dict>

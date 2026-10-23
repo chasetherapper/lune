@@ -1,3 +1,4 @@
+import { APP_NAME } from "../lib/appName";
 import { ContextMenuArea, FadeLabel, Symbol, WindowDragRegion } from "@ardia/shell";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
@@ -654,7 +655,7 @@ const CleanUpUpsell = memo(function CleanUpUpsell({ windowId, shift }: { windowI
         <Symbol name="wand.and.stars" size={12} color={theme.icon} style={{ width: 16, height: 16 }} />
         <Text style={{ flex: 1, fontSize: 12, fontWeight: "600", color: theme.textPrimary }}>{count} tabs haven’t been touched in a while</Text>
       </View>
-      <Text style={{ fontSize: 12, color: theme.textSecondary }}>Ardia can tidy up for you. You can always reopen closed tabs from the ⌄ menu.</Text>
+      <Text style={{ fontSize: 12, color: theme.textSecondary }}>{APP_NAME} can tidy up for you. You can always reopen closed tabs from the ⌄ menu.</Text>
       <View style={{ gap: 6 }}>
         {button("Clean Up Once", () => {
           useBrowser.getState().cleanUpTabs(windowId);

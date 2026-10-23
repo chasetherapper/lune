@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../../lib/appName";
 import { cancelShortcutRecording, recordShortcut, Symbol, type MenuShortcut } from "@ardia/shell";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -105,7 +106,7 @@ export function ShortcutsPane() {
   return (
     <View>
       <Text style={{ marginTop: 20, fontSize: 12.5, lineHeight: 17, color: theme.textSecondary }}>
-        Perform common actions in Ardia faster and from anywhere. Select an action to customize its keyboard shortcut.
+        Perform common actions in {APP_NAME} faster and from anywhere. Select an action to customize its keyboard shortcut.
       </Text>
       <Anchor id="shortcuts.actions" radius={8} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 14 }}>
         <SearchField value={query} onChangeText={setQuery} placeholder="Search actions" style={{ flex: 1 }} />

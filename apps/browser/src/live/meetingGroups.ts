@@ -1,3 +1,4 @@
+import { APP_NAME } from "../lib/appName";
 import { confirm } from "@ardia/shell";
 import { useBrowser, type BrowserState } from "../store/browser";
 import { changedIds } from "../store/changes";
@@ -85,7 +86,7 @@ async function offerAlerts(windowId: string) {
   updateCalendarSettings({ prompted: true });
   const { confirmed } = await confirm({
     title: "Would you like to see meeting alerts for this calendar?",
-    message: "Ardia can alert you when a new meeting is about to begin. You can hide these alerts or manage how close to a meeting start they show up.",
+    message: `${APP_NAME} can alert you when a new meeting is about to begin. You can hide these alerts or manage how close to a meeting start they show up.`,
     confirmTitle: "Show Alerts",
     cancelTitle: "Don't Show These Alerts",
     windowId,

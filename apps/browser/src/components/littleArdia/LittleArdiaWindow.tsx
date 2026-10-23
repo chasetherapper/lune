@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../lib/appName";
 import { breadcrumb } from "@ardia/core";
 import { WindowBackdrop } from "@ardia/shaders";
 import { ContextMenuArea, FadeLabel, setTrafficLightsCenter, Symbol, WindowDragRegion } from "@ardia/shell";
@@ -71,7 +72,7 @@ function LittleArdiaBar() {
       </View>
       <View style={{ position: "absolute", right: INSET, top: MID - BUTTON / 2, flexDirection: "row", gap: 2 }}>
         <IconButton icon={copied ? "checkmark" : "link"} size={14} box={BUTTON} radius={7} disabled={!tab?.url} tooltip="Copy Link (⇧⌘C)" onPress={copy} />
-        <IconButton icon="arrow.up.left.and.arrow.down.right" size={13} box={BUTTON} radius={7} tooltip="Open in Ardia (⌘O)" onPress={() => openInMainWindow(windowId)} />
+        <IconButton icon="arrow.up.left.and.arrow.down.right" size={13} box={BUTTON} radius={7} tooltip={`Open in ${APP_NAME} (⌘O)`} onPress={() => openInMainWindow(windowId)} />
       </View>
     </View>
   );

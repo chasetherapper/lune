@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../../lib/appName";
 import type { SystemCalendar } from "@ardia/shell";
 import { Linking, Text, View } from "react-native";
 import { useTheme } from "../../../lib/theme";
@@ -32,7 +33,7 @@ export function CalendarPane() {
               : connected
                 ? `Connected · ${calendars.length === 1 ? "1 calendar" : `${calendars.length} calendars`}`
                 : denied
-                  ? "Ardia isn't allowed to read your calendars. Allow it in System Settings › Privacy & Security › Calendars."
+                  ? `${APP_NAME} isn't allowed to read your calendars. Allow it in System Settings › Privacy & Security › Calendars.`
                   : "Not connected"
           }
         >

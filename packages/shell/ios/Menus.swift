@@ -346,7 +346,7 @@ enum MainMenu {
       cmd("New Tab in Group", "newTabInGroup", "t", [.command, .option]),
       cmd("New Window", "newWindow", "n"),
       cmd("New Incognito Window", "newIncognitoWindow", "n", [.command, .shift]),
-      cmd("New Little Ardia Window", "newLittleArdia", "n", [.command, .option]),
+      cmd("New Little \(Bundle.main.appName) Window", "newLittleArdia", "n", [.command, .option]),
       cmd("Open Links from Other Apps in Main Window", "toggleOpenLinksInLittleArdia"),
       cmd("Reopen Closed Tab", "reopenClosedTab", "t", [.command, .shift]),
       cmd("Reopen Closed Window", "reopenClosedWindow"),
@@ -943,7 +943,7 @@ enum MainMenu {
     let incognito = CommandItem("New Incognito Window", "newIncognitoWindow")
     incognito.windowless = true
     menu.addItem(incognito)
-    let small = CommandItem("New Little Ardia Window", "newLittleArdia")
+    let small = CommandItem("New Little \(Bundle.main.appName) Window", "newLittleArdia")
     small.windowless = true
     menu.addItem(small)
     return menu

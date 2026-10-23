@@ -1,3 +1,4 @@
+import { APP_NAME } from "./appName";
 import { beginTracing, endTracing, engineInfo, isTracing, openTaskManager } from "@ardia/ardiacore";
 import {
   confirm,
@@ -114,7 +115,7 @@ async function recordPerformanceIssue() {
   if (await isTracing()) return;
   const start = await confirm({
     title: "Record a performance issue?",
-    message: "Ardia records what the engine does while you reproduce the problem. The recording is saved to your Downloads folder.",
+    message: `${APP_NAME} records what the engine does while you reproduce the problem. The recording is saved to your Downloads folder.`,
     confirmTitle: "Start Recording",
   });
   if (!start.confirmed || !(await beginTracing())) return;

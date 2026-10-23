@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../lib/appName";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { installCliInBackground, useCli } from "../../lib/cliControl";
@@ -49,14 +50,14 @@ export function CliStep() {
     >
       <Reveal delay={60}>
         <StepTitle
-          title="Drive Ardia from the terminal"
-          subtitle="The ardia command lets scripts and coding agents open tabs, click, type and read pages in Ardia."
+          title={`Drive ${APP_NAME} from the terminal`}
+          subtitle={`The ardia command lets scripts and coding agents open tabs, click, type and read pages in ${APP_NAME}.`}
         />
       </Reveal>
       <Reveal delay={140} style={{ gap: 12 }}>
         <CheckRow
           icon="terminal"
-          title="Let the ardia command control Ardia"
+          title={`Let the ardia command control ${APP_NAME}`}
           subtitle="Stays on after you quit. Turn it off in Settings."
           value={control}
           disabled={started}
@@ -104,7 +105,7 @@ function Terminal() {
         <Text style={{ flex: 1, textAlign: "center", marginRight: 39, fontSize: 11, color: colors.steps }}>zsh</Text>
       </View>
       <View style={{ paddingHorizontal: 12, paddingVertical: 12, gap: 2 }}>
-        {line(`$ ardia exec 'await tab.go_to("https://ardia.dev")'`, colors.title)}
+        {line(`$ ardia exec 'await tab.go_to("https://example.com")'`, colors.title)}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
           {line("$", colors.title)}
           <View style={{ width: 7, height: 13, marginLeft: 4, backgroundColor: colors.title, opacity: 0.6 }} />

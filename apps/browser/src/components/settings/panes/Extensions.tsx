@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../../lib/appName";
 import { reloadExtension, type InstalledExtension } from "@ardia/ardiacore";
 import { useState } from "react";
 import { Image, Text, View } from "react-native";
@@ -57,7 +58,7 @@ export function ExtensionsPane() {
     <View>
       <SectionHeader
         anchor="extensions.installed"
-        description="Add features to Ardia with extensions from the Chrome Web Store. Each profile has its own."
+        description={`Add features to ${APP_NAME} with extensions from the Chrome Web Store. Each profile has its own.`}
         action={
           profiles.length > 1 ? (
             <PopUp value={profileId} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={setProfileId} />

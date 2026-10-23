@@ -1,4 +1,6 @@
-export const LOGS_URL = "https://ardia.dev/otel/v1/logs";
+export const LOGS_URL: string | null = null;
+
+export const TELEMETRY_AVAILABLE = LOGS_URL !== null;
 
 export const MAX_BODY_BYTES = 500_000;
 

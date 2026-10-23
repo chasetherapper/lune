@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { editDistance, groupByPane, search } from "./searchMatch.ts";
 import { SETTINGS, SETTINGS_INDEX } from "./settingsIndex.ts";
+import { TELEMETRY_AVAILABLE } from "../../telemetry/config.ts";
 
 const ids = (query) => search(SETTINGS_INDEX, query).map((h) => h.entry.id);
 const first = (query) => ids(query)[0];
@@ -75,7 +76,7 @@ test("edit distance counts a swap as one edit", () => {
 test("every indexed setting is anchored in its pane, and every anchor is indexed", () => {
   const dir = new URL("./panes/", import.meta.url);
   const sources = readdirSync(dir)
-    .filter((f) => f.endsWith(".tsx"))
+    .filter((f) => f.endsWith(".tsx") && (TELEMETRY_AVAILABLE || f !== "ShareDiagnostics.tsx"))
     .map((f) => readFileSync(new URL(f, dir), "utf8"))
     .join("\n");
   const panes = new Set(SETTINGS.map((s) => s.pane));

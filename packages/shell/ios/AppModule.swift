@@ -2,6 +2,10 @@ import AppKit
 import MachO
 import ExpoModulesCore
 
+extension Bundle {
+  var appName: String { object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Lune" }
+}
+
 public class AppModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ArdiaApp")
@@ -95,7 +99,7 @@ public class AppModule: Module {
       let configuration = "Release"
       #endif
       return [
-        "appName": info["CFBundleName"] as? String ?? "Ardia",
+        "appName": Bundle.main.appName,
         "appVersion": info["CFBundleShortVersionString"] as? String ?? "",
         "appBuild": info["CFBundleVersion"] as? String ?? "",
         "bundleId": Bundle.main.bundleIdentifier ?? "",

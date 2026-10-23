@@ -1,5 +1,9 @@
 import Foundation
 
+extension Bundle {
+  var appName: String { object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Lune" }
+}
+
 public enum SafariDirect {
   static let cocoaEpoch = 978_307_200.0
 
@@ -24,7 +28,7 @@ public enum SafariDirect {
                           cancellation: Cancellation = .init()) throws -> SafariExport {
     let dir = directory(home: home)
     guard hasAccess(home: home) else {
-      throw ImportError.locked("Ardia needs Full Disk Access to read Safari's data.")
+      throw ImportError.locked("\(Bundle.main.appName) needs Full Disk Access to read Safari's data.")
     }
     var out = SafariExport()
     var history: [HistoryEntry] = []

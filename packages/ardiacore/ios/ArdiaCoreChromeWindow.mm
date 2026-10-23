@@ -263,7 +263,7 @@ void ConfigureWindow(NSWindow *window) {
   if (!NSEqualRects(window.frame, frame)) [window setFrame:frame display:NO];
   window.titlebarAppearsTransparent = YES;
   window.titleVisibility = NSWindowTitleHidden;
-  window.title = @"Ardia";
+  window.title = NSBundle.mainBundle.infoDictionary[@"CFBundleName"] ?: @"Lune";
   window.minSize = NSMakeSize(720, 460);
   window.backgroundColor = WindowColor();
   window.releasedWhenClosed = NO;

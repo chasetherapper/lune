@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../lib/appName";
 import {
   onExtensionInstallPrompt,
   onExtensionActionChanged,
@@ -269,8 +270,8 @@ if (!g.__ardiaStore) {
     for (const el of document.querySelectorAll("button, button *")) {
       if (el.childElementCount) continue;
       const t = el.textContent;
-      if (t === "Add to Chrome") el.textContent = "Add to Ardia";
-      else if (t === "Remove from Chrome") el.textContent = "Remove from Ardia";
+      if (t === "Add to Chrome") el.textContent = "Add to ${APP_NAME}";
+      else if (t === "Remove from Chrome") el.textContent = "Remove from ${APP_NAME}";
     }
   };
   relabel();

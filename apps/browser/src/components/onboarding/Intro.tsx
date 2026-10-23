@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../lib/appName";
 import { DIA_SPECTRUM, PowerUp } from "@ardia/shaders";
 import { playIntroMusic, setIntroMusicMuted, stopIntroMusic, Symbol, type IntroMusicCues } from "@ardia/shell";
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +8,7 @@ import { useHover } from "../primitives";
 import { introMusicMuted, saveIntroMusicMuted } from "./state";
 import { SecondaryButton, useOnboardingColors } from "./ui";
 
-const WORDMARK = "Ardia";
+const WORDMARK = APP_NAME;
 const ICON = require("../../../assets/app-icon.png");
 
 const LETTER = 0.52;

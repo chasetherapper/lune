@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../lib/appName";
 import { FadeLabel } from "@ardia/shell";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
@@ -95,7 +96,7 @@ function SignIn({ denied }: { denied: boolean }) {
   if (denied) {
     return (
       <Text style={{ fontSize: 12.5, lineHeight: 17, color: theme.textSecondary, paddingVertical: 4 }}>
-        Allow Ardia in System Settings › Privacy & Security › Calendars to see your meetings here.
+        Allow {APP_NAME} in System Settings › Privacy & Security › Calendars to see your meetings here.
       </Text>
     );
   }

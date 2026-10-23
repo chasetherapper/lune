@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../../lib/appName";
 import { engineHost, type SearchEngine } from "@ardia/core";
 import { Symbol } from "@ardia/shell";
 import { useState } from "react";
@@ -56,7 +57,7 @@ export function SearchPane() {
 
       {fromExtensions.length > 0 && (
         <>
-          <SectionHeader title="Extensions" description="Some extensions can add search engines to Ardia." />
+          <SectionHeader title="Extensions" description={`Some extensions can add search engines to ${APP_NAME}.`} />
           <Group>
             {fromExtensions.map((e) => (
               <EngineRow key={e.id} engine={e} selected={selectedId === e.id} locked={locked} />

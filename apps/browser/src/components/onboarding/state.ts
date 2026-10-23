@@ -1,3 +1,4 @@
+import { TELEMETRY_AVAILABLE } from "../../telemetry/config";
 import { launchEnvironment, readDocument, stopIntroMusic, writeDocument } from "@ardia/shell";
 import { create } from "zustand";
 import { useBrowser } from "../../store/browser";
@@ -7,7 +8,9 @@ import { endToolTour, startToolTour } from "./tour/state";
 
 export type OnboardingStep = "intro" | "defaultBrowser" | "personalize" | "import" | "pinnedTabs" | "privacy" | "cli" | "outro";
 
-export const STEPS: OnboardingStep[] = ["intro", "defaultBrowser", "personalize", "import", "pinnedTabs", "privacy", "cli", "outro"];
+export const STEPS: OnboardingStep[] = (["intro", "defaultBrowser", "personalize", "import", "pinnedTabs", "privacy", "cli", "outro"] as const).filter(
+  (step) => step !== "privacy" || TELEMETRY_AVAILABLE,
+);
 
 type OnboardingState = {
   windowId: string | null;

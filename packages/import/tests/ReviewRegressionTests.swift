@@ -62,3 +62,61 @@ final class ReviewRegressionTests: XCTestCase {
     XCTAssertThrowsError(try SafariExport.paymentCards(&hidden))
   }
 }
+
+final class ZipBombTests: XCTestCase {
+  private struct Member {
+    var name: String
+    var method: UInt16
+    var body: [UInt8]
+    var declaredSize: Int
+  }
+
+  private func zip(_ members: [Member]) -> Data {
+    func le16(_ v: Int) -> [UInt8] { (0..<2).map { UInt8((v >> (8 * $0)) & 0xFF) } }
+    func le32(_ v: Int) -> [UInt8] { (0..<4).map { UInt8((v >> (8 * $0)) & 0xFF) } }
+    var bytes: [UInt8] = []
+    var directory: [UInt8] = []
+    for member in members {
+      let name = Array(member.name.utf8)
+      let offset = bytes.count
+      bytes += le32(0x0403_4B50) + le16(20) + le16(0) + le16(Int(member.method)) + le16(0) + le16(0) + le32(0)
+      bytes += le32(member.body.count) + le32(member.declaredSize) + le16(name.count) + le16(0) + name + member.body
+      directory += le32(0x0201_4B50) + le16(20) + le16(20) + le16(0) + le16(Int(member.method)) + le16(0) + le16(0) + le32(0)
+      directory += le32(member.body.count) + le32(member.declaredSize) + le16(name.count) + le16(0) + le16(0)
+      directory += le16(0) + le16(0) + le32(0) + le32(offset) + name
+    }
+    let directoryOffset = bytes.count
+    bytes += directory
+    bytes += le32(0x0605_4B50) + le16(0) + le16(0) + le16(members.count) + le16(members.count)
+    bytes += le32(directory.count) + le32(directoryOffset) + le16(0)
+    return Data(bytes)
+  }
+
+  private let tinyDeflate: [UInt8] = [0x03, 0x00]
+
+  func testEntryDeclaringMoreThanTheCapIsRefusedBeforeInflating() throws {
+    let archive = try ZipArchive(zip([Member(name: "History.json", method: 8, body: Array(repeating: 0, count: 400_000), declaredSize: 200 * 1024 * 1024)]))
+    XCTAssertThrowsError(try archive.extract(archive.entries[0]))
+  }
+
+  func testImplausibleCompressionRatioIsRefused() throws {
+    let archive = try ZipArchive(zip([Member(name: "History.json", method: 8, body: tinyDeflate, declaredSize: 64 * 1024 * 1024)]))
+    XCTAssertThrowsError(try archive.extract(archive.entries[0]))
+  }
+
+  func testArchiveDeclaringTooMuchInTotalIsRefused() {
+    let entry = Member(name: "History.json", method: 8, body: Array(repeating: 0, count: 400_000), declaredSize: 100 * 1024 * 1024)
+    XCTAssertThrowsError(try ZipArchive(zip([entry, entry, entry])))
+  }
+
+  func testEmptyDeflateBodyWithDeclaredOutputIsRefused() throws {
+    let archive = try ZipArchive(zip([Member(name: "History.json", method: 8, body: [], declaredSize: 10)]))
+    XCTAssertThrowsError(try archive.extract(archive.entries[0]))
+  }
+
+  func testStoredEntriesStillExtract() throws {
+    let text = Array("{\"history\":[]}".utf8)
+    let archive = try ZipArchive(zip([Member(name: "History.json", method: 0, body: text, declaredSize: text.count)]))
+    XCTAssertEqual(try archive.extract(archive.entries[0]), Data(text))
+  }
+}

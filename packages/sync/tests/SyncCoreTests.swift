@@ -85,4 +85,31 @@ final class SyncVaultTests: XCTestCase {
     XCTAssertFalse(vault.chainExists())
     XCTAssertEqual(other.read(scope: "app", skipping: []).files.count, 1)
   }
+
+  func testRemoveIgnoresIdsThatAreNotTags() throws {
+    try vault.createChain()
+    let kept = try vault.write(scope: "app", payload: Data("mine".utf8))
+    let outside = vault.scopeURL("app").deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("victim.\(SyncVault.fileExtension)")
+    try Data("keep".utf8).write(to: outside)
+    vault.remove(scope: "app", ids: ["../../victim", "", "."])
+    XCTAssertTrue(FileManager.default.fileExists(atPath: outside.path))
+    XCTAssertEqual(vault.read(scope: "app", skipping: []).files.count, 1)
+    vault.remove(scope: "app", ids: [kept])
+    XCTAssertEqual(vault.read(scope: "app", skipping: []).files.count, 0)
+  }
+}
+
+final class FileKeyStoreTests: XCTestCase {
+  func testSavedKeyIsOwnerOnlyAndLeavesNoTemporaryFile() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ac-keystore-tests-\(UUID().uuidString)", isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = FileKeyStore(directory: directory)
+    let secret = RecoveryPhrase.generateEntropy()
+    XCTAssertTrue(store.save(secret, account: "device-1"))
+    XCTAssertTrue(store.save(secret, account: "device-1"))
+    XCTAssertEqual(store.load(account: "device-1"), secret)
+    let attributes = try FileManager.default.attributesOfItem(atPath: store.url("device-1").path)
+    XCTAssertEqual((attributes[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+    XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), ["sync-key-device-1"])
+  }
 }

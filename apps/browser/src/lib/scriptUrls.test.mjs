@@ -23,3 +23,27 @@ test("ordinary URLs and searches are not", () => {
   for (const url of ["https://example.com/javascript:x", "example.com", "about:blank", "javascript tutorial", "%6Aavascript:alert(1)", "file:///tmp/javascript:x"])
     assert.equal(runsJavaScript(url, DEFAULT_SETTINGS), false, JSON.stringify(url));
 });
+
+test("script-capable data: and view-source: URLs are caught", () => {
+  for (const url of [
+    "data:text/html,<script>alert(1)</script>",
+    "data: text/html,<b>x</b>",
+    "DATA:TEXT/HTML,<script>alert(1)</script>",
+    "data:application/xhtml+xml,<script>alert(1)</script>",
+    "view-source:javascript:alert(1)",
+    "view-source:data:text/html,<script>alert(1)</script>",
+    "VIEW-SOURCE:JAVASCRIPT:alert(1)",
+    "view-source:view-source:javascript:alert(1)",
+    "  data:text/html,<script>alert(1)</script>",
+  ]) assert.equal(runsJavaScript(url, DEFAULT_SETTINGS), true, JSON.stringify(url));
+});
+
+test("non-script data: and view-source: URLs are not", () => {
+  for (const url of [
+    "data:image/png;base64,iVBORw0KGgo=",
+    "data:text/plain,hello",
+    "view-source:https://example.com",
+    "view-source:file:///tmp/javascript:x",
+    "https://example.com/?q=data:text/html",
+  ]) assert.equal(runsJavaScript(url, DEFAULT_SETTINGS), false, JSON.stringify(url));
+});

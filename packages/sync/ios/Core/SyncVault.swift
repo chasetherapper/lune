@@ -45,6 +45,7 @@ public final class SyncVault {
   public func remove(scope: String, ids: [String]) {
     let directory = scopeURL(scope)
     for id in ids {
+      guard Base32.isTag(id) else { continue }
       let url = directory.appendingPathComponent("\(id).\(Self.fileExtension)")
       try? coordinate(writing: url, options: .forDeleting) { url in try self.fileManager.removeItem(at: url) }
       try? fileManager.removeItem(at: directory.appendingPathComponent(".\(id).\(Self.fileExtension).icloud"))

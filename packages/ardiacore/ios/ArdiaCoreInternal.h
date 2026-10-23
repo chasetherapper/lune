@@ -95,6 +95,9 @@ bool EngineHasTabModel();
 
 @interface ArdiaCoreFavicons (Tabs)
 + (void)noteImage:(nullable NSImage *)image forURL:(nullable NSString *)url profile:(nullable NSString *)profile;
++ (void)fetchImage:(NSString *)url
+           profile:(NSString *)profile
+        completion:(void (^)(NSDictionary<NSString *, id> *_Nullable result))completion;
 @end
 
 NS_ASSUME_NONNULL_END

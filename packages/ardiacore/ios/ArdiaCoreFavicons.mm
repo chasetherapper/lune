@@ -4,7 +4,8 @@ namespace {
 
 constexpr int kFaviconSize = 32;
 constexpr NSUInteger kMaxBytes = 2 * 1024 * 1024;
-constexpr NSUInteger kMaxDecodedBytes = 16 * 1024 * 1024;
+constexpr NSUInteger kMaxFaviconDecodedBytes = 16 * 1024 * 1024;
+constexpr NSUInteger kMaxImageDecodedBytes = 64 * 1024 * 1024;
 
 NSCache<NSString *, NSImage *> *Seen() {
   static NSCache *cache = [] {
@@ -15,11 +16,11 @@ NSCache<NSString *, NSImage *> *Seen() {
   return cache;
 }
 
-bool DecodedBytesWithinLimit(NSImageRep *rep) {
+bool DecodedBytesWithinLimit(NSImageRep *rep, NSUInteger maxBytes) {
   const NSInteger wide = rep.pixelsWide;
   const NSInteger high = rep.pixelsHigh;
   if (wide <= 0 || high <= 0) return true;
-  return wide <= (NSInteger)(kMaxDecodedBytes / 4 / high);
+  return wide <= (NSInteger)(maxBytes / 4 / high);
 }
 
 NSString *SeenKey(NSString *profile, NSString *url) {
@@ -51,7 +52,7 @@ NSDictionary *Store(NSData *png, int width, int height, NSString *profile, NSStr
   return @{@"uri" : uri, @"width" : @(width), @"height" : @(height)};
 }
 
-NSData *PNG(NSImage *image, int pixels, int *width, int *height) {
+NSData *PNG(NSImage *image, int pixels, NSUInteger maxDecodedBytes, int *width, int *height) {
   if (!image || image.size.width <= 0 || image.size.height <= 0) return nil;
   NSImageRep *best = nil;
   NSInteger bestSize = 0;
@@ -62,7 +63,7 @@ NSData *PNG(NSImage *image, int pixels, int *width, int *height) {
     if (better) best = rep, bestSize = size;
   }
   if (!best) return nil;
-  if (!DecodedBytesWithinLimit(best)) return nil;
+  if (!DecodedBytesWithinLimit(best, maxDecodedBytes)) return nil;
   const int side = (int)MIN((NSInteger)pixels, bestSize);
   NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:side pixelsHigh:side bitsPerSample:8
                                                                 samplesPerPixel:4 hasAlpha:YES isPlanar:NO
@@ -91,6 +92,27 @@ void Download(NSString *url, NSString *profileName, void (^done)(NSData *_Nullab
   ardiacore_host::WithProfile(profileName, fetch);
 }
 
+void Fetch(NSString *url, NSString *profile, NSString *_Nullable name, NSUInteger maxDecodedBytes,
+           void (^completion)(NSDictionary<NSString *, id> *_Nullable result)) {
+  int width = 0, height = 0;
+  if (NSImage *seen = [Seen() objectForKey:SeenKey(profile, url)]) {
+    return completion(Store(PNG(seen, kFaviconSize * 2, maxDecodedBytes, &width, &height), width, height, profile, name));
+  }
+  if ([url hasPrefix:@"data:image/"]) {
+    if (url.length > kMaxBytes * 2) return completion(nil);
+    NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:url]];
+    NSImage *image = data && data.length <= kMaxBytes ? [[NSImage alloc] initWithData:data] : nil;
+    return completion(Store(PNG(image, kFaviconSize * 2, maxDecodedBytes, &width, &height), width, height, profile, name));
+  }
+  NSString *scheme = [NSURL URLWithString:url].scheme.lowercaseString;
+  if (!([scheme isEqualToString:@"https"] || [scheme isEqualToString:@"http"])) return completion(nil);
+  Download(url, profile, ^(NSData *body) {
+    int w = 0, h = 0;
+    NSImage *image = body ? [[NSImage alloc] initWithData:body] : nil;
+    completion(image ? Store(PNG(image, kFaviconSize * 2, maxDecodedBytes, &w, &h), w, h, profile, name) : nil);
+  });
+}
+
 }
 
 @implementation ArdiaCoreFavicons
@@ -103,23 +125,13 @@ void Download(NSString *url, NSString *profileName, void (^done)(NSData *_Nullab
        profile:(NSString *)profile
           name:(NSString *)name
     completion:(void (^)(NSDictionary<NSString *, id> *))completion {
-  int width = 0, height = 0;
-  if (NSImage *seen = [Seen() objectForKey:SeenKey(profile, url)]) {
-    return completion(Store(PNG(seen, kFaviconSize * 2, &width, &height), width, height, profile, name));
-  }
-  if ([url hasPrefix:@"data:image/"]) {
-    if (url.length > kMaxBytes * 2) return completion(nil);
-    NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:url]];
-    NSImage *image = data && data.length <= kMaxBytes ? [[NSImage alloc] initWithData:data] : nil;
-    return completion(Store(PNG(image, kFaviconSize * 2, &width, &height), width, height, profile, name));
-  }
-  NSString *scheme = [NSURL URLWithString:url].scheme.lowercaseString;
-  if (!([scheme isEqualToString:@"https"] || [scheme isEqualToString:@"http"])) return completion(nil);
-  Download(url, profile, ^(NSData *body) {
-    int w = 0, h = 0;
-    NSImage *image = body ? [[NSImage alloc] initWithData:body] : nil;
-    completion(image ? Store(PNG(image, kFaviconSize * 2, &w, &h), w, h, profile, name) : nil);
-  });
+  Fetch(url, profile, name, kMaxFaviconDecodedBytes, completion);
+}
+
++ (void)fetchImage:(NSString *)url
+           profile:(NSString *)profile
+        completion:(void (^)(NSDictionary<NSString *, id> *))completion {
+  Fetch(url, profile, nil, kMaxImageDecodedBytes, completion);
 }
 
 @end

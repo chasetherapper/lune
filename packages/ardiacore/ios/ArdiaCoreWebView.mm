@@ -2242,7 +2242,7 @@ void ArdiaCoreWebViewsSetFieldTiming(BOOL on) {
 }
 
 - (void)downloadImage:(NSString *)url maxPixels:(NSInteger)maxPixels completion:(void (^)(NSDictionary<NSString *, id> *))completion {
-  [ArdiaCoreFavicons fetch:url profile:_profile name:nil completion:completion];
+  [ArdiaCoreFavicons fetchImage:url profile:_profile completion:completion];
 }
 
 - (void)mediaCommand:(NSString *)action seconds:(double)seconds {

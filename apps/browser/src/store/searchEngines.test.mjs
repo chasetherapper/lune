@@ -37,3 +37,18 @@ test("a non-http synced search template never becomes a navigation", () => {
   assert.ok(first);
   assert.notEqual(resolveInput("innocent search", first.url).slice(0, 11), "javascript:");
 });
+
+test("malformed synced engine entries are ignored without throwing", () => {
+  const valid = { id: "engine-ok", name: "OK", keyword: "ok", url: "https://example.com/?q=%s" };
+  const malformed = [null, undefined, "engine", 42, { id: "missing-url" }, { ...valid, id: "bad-keyword", keyword: null }, valid];
+  assert.deepEqual(enginesWith({ customSearchEngines: malformed }), enginesWith({ customSearchEngines: [valid] }));
+  assert.doesNotThrow(() => enginesWith({ customSearchEngines: null }));
+});
+
+test("filtering invalid engines preserves referential stability", () => {
+  const settings = {
+    ...DEFAULT_SETTINGS,
+    customSearchEngines: [{ id: "bad", name: "Bad", keyword: "bad", url: "javascript:alert(1)//%s" }],
+  };
+  assert.equal(searchEngines(settings), searchEngines(settings));
+});

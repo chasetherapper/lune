@@ -4,6 +4,7 @@ namespace {
 
 constexpr int kFaviconSize = 32;
 constexpr NSUInteger kMaxBytes = 2 * 1024 * 1024;
+constexpr NSUInteger kMaxDecodedBytes = 16 * 1024 * 1024;
 
 NSCache<NSString *, NSImage *> *Seen() {
   static NSCache *cache = [] {
@@ -12,6 +13,13 @@ NSCache<NSString *, NSImage *> *Seen() {
     return c;
   }();
   return cache;
+}
+
+bool DecodedBytesWithinLimit(NSImageRep *rep) {
+  const NSInteger wide = rep.pixelsWide;
+  const NSInteger high = rep.pixelsHigh;
+  if (wide <= 0 || high <= 0) return true;
+  return wide <= (NSInteger)(kMaxDecodedBytes / 4 / high);
 }
 
 NSString *SeenKey(NSString *profile, NSString *url) {
@@ -54,6 +62,7 @@ NSData *PNG(NSImage *image, int pixels, int *width, int *height) {
     if (better) best = rep, bestSize = size;
   }
   if (!best) return nil;
+  if (!DecodedBytesWithinLimit(best)) return nil;
   const int side = (int)MIN((NSInteger)pixels, bestSize);
   NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:side pixelsHigh:side bitsPerSample:8
                                                                 samplesPerPixel:4 hasAlpha:YES isPlanar:NO
@@ -99,8 +108,9 @@ void Download(NSString *url, NSString *profileName, void (^done)(NSData *_Nullab
     return completion(Store(PNG(seen, kFaviconSize * 2, &width, &height), width, height, profile, name));
   }
   if ([url hasPrefix:@"data:image/"]) {
+    if (url.length > kMaxBytes * 2) return completion(nil);
     NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:url]];
-    NSImage *image = data ? [[NSImage alloc] initWithData:data] : nil;
+    NSImage *image = data && data.length <= kMaxBytes ? [[NSImage alloc] initWithData:data] : nil;
     return completion(Store(PNG(image, kFaviconSize * 2, &width, &height), width, height, profile, name));
   }
   NSString *scheme = [NSURL URLWithString:url].scheme.lowercaseString;

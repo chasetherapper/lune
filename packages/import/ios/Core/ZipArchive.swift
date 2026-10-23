@@ -13,6 +13,9 @@ struct ZipArchive {
   let data: Data
   let entries: [Entry]
 
+  static let maxDecompressedBytes = 128 * 1024 * 1024
+  static let maxCompressionRatio = 512
+
   init(_ data: Data) throws {
     self.data = data
     let minEOCD = 22
@@ -72,6 +75,8 @@ struct ZipArchive {
       return body
     case 8:
       guard entry.size > 0 else { return Data() }
+      guard entry.size <= Self.maxDecompressedBytes else { throw ImportError.unreadable("Zip entry \(entry.name) is too large to extract") }
+      guard entry.size <= max(entry.compressedSize, 1) * Self.maxCompressionRatio else { throw ImportError.unreadable("Zip entry \(entry.name) claims an implausible compression ratio") }
       var out = Data(count: entry.size)
       let written = out.withUnsafeMutableBytes { dst in
         body.withUnsafeBytes { src in

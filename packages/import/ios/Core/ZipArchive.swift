@@ -13,6 +13,10 @@ struct ZipArchive {
   let data: Data
   let entries: [Entry]
 
+  static let maxDecompressedBytes = 128 * 1024 * 1024
+  static let maxTotalDecompressedBytes = 256 * 1024 * 1024
+  static let maxCompressionRatio = 512
+
   init(_ data: Data) throws {
     self.data = data
     let minEOCD = 22
@@ -55,6 +59,12 @@ struct ZipArchive {
       }
       offset += 46 + nameLength + extraLength + commentLength
     }
+    var totalSize = 0
+    for entry in list {
+      let outputSize = entry.method == 0 ? entry.compressedSize : entry.size
+      guard outputSize <= Self.maxTotalDecompressedBytes - totalSize else { throw ImportError.unreadable("Zip contents are too large to extract") }
+      totalSize += outputSize
+    }
     entries = list
   }
 
@@ -69,14 +79,19 @@ struct ZipArchive {
     let body = data.subdata(in: start..<start + entry.compressedSize)
     switch entry.method {
     case 0:
+      guard body.count <= Self.maxDecompressedBytes else { throw ImportError.unreadable("Zip entry \(entry.name) is too large to extract") }
       return body
     case 8:
       guard entry.size > 0 else { return Data() }
+      guard !body.isEmpty else { throw ImportError.unreadable("Couldn't inflate \(entry.name)") }
+      guard entry.size <= Self.maxDecompressedBytes else { throw ImportError.unreadable("Zip entry \(entry.name) is too large to extract") }
+      guard entry.size <= max(entry.compressedSize, 1) * Self.maxCompressionRatio else { throw ImportError.unreadable("Zip entry \(entry.name) claims an implausible compression ratio") }
       var out = Data(count: entry.size)
-      let written = out.withUnsafeMutableBytes { dst in
-        body.withUnsafeBytes { src in
-          compression_decode_buffer(dst.bindMemory(to: UInt8.self).baseAddress!, entry.size,
-                                    src.bindMemory(to: UInt8.self).baseAddress!, body.count, nil, COMPRESSION_ZLIB)
+      let written = out.withUnsafeMutableBytes { dst -> Int in
+        guard let destination = dst.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+        return body.withUnsafeBytes { src -> Int in
+          guard let source = src.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+          return compression_decode_buffer(destination, entry.size, source, body.count, nil, COMPRESSION_ZLIB)
         }
       }
       guard written == entry.size else { throw ImportError.unreadable("Couldn't inflate \(entry.name)") }

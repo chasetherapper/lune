@@ -127,17 +127,29 @@ const engineCache = new WeakMap<
   { legacyUrl: string; extension: ExtensionSearchEngine[]; engines: SearchEngine[] }
 >();
 
+const engineUrlAllowed = (url: string | undefined): url is string =>
+  typeof url === "string" && /^https?:\/\//i.test(url) && url.includes("%s");
+
+const validCustomEngine = (engine: CustomSearchEngine | null | undefined): engine is CustomSearchEngine =>
+  !!engine &&
+  typeof engine === "object" &&
+  typeof engine.id === "string" &&
+  typeof engine.name === "string" &&
+  typeof engine.keyword === "string" &&
+  engineUrlAllowed(engine.url);
+
 export function searchEngines(settings: Settings): SearchEngine[] {
-  const custom = settings.customSearchEngines ?? NO_CUSTOM_ENGINES;
+  const listed = Array.isArray(settings.customSearchEngines) ? settings.customSearchEngines : NO_CUSTOM_ENGINES;
   const extension = settings.extensionSearchEngines ?? NO_EXTENSION_ENGINES;
-  const cached = engineCache.get(custom);
+  const cached = engineCache.get(listed);
   if (cached && cached.legacyUrl === settings.customSearchUrl && cached.extension === extension) return cached.engines;
+  const custom = listed.filter(validCustomEngine);
   const engines = allEngines(custom, extension);
-  if (settings.customSearchUrl?.includes("%s")) {
+  if (engineUrlAllowed(settings.customSearchUrl)) {
     const at = engines.findIndex((e) => e.extension);
     engines.splice(at < 0 ? engines.length : at, 0, { id: "custom", name: "Custom", keyword: "custom", url: settings.customSearchUrl, custom: true });
   }
-  engineCache.set(custom, { legacyUrl: settings.customSearchUrl, extension, engines });
+  engineCache.set(listed, { legacyUrl: settings.customSearchUrl, extension, engines });
   return engines;
 }
 

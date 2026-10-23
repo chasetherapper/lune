@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import ExpoModulesCore
 
 public enum OpenURLInbox {
@@ -229,6 +230,7 @@ public class ShellModule: Module {
   private var sidebarObservers: [(NotificationCenter, NSObjectProtocol)] = []
   private var flagsMonitor: Any?
   private var switcherMonitor: Any?
+  private var dragEscapeMonitor: Any?
   private let switcherPointer = SwitcherPointer()
 
   public func definition() -> ModuleDefinition {
@@ -237,6 +239,7 @@ public class ShellModule: Module {
 
     OnCreate {
       _ = installTextFieldSelectAll
+      _ = installInputSourceKeys
       _ = installScrollViewInsetFix
       _ = installOutsidePressMonitor
       DispatchQueue.main.async { [weak self] in
@@ -274,6 +277,8 @@ public class ShellModule: Module {
       self.flagsMonitor = nil
       if let monitor = self.switcherMonitor { NSEvent.removeMonitor(monitor) }
       self.switcherMonitor = nil
+      if let monitor = self.dragEscapeMonitor { NSEvent.removeMonitor(monitor) }
+      self.dragEscapeMonitor = nil
       let gone = ObjectIdentifier(self)
       DispatchQueue.main.async {
         WindowManager.shared.runtimeGone(gone)
@@ -485,6 +490,20 @@ public class ShellModule: Module {
         case 123: emit(["type": "switcherKey", "key": "previous"])
         default: break
         }
+        return nil
+      }
+    }.runOnQueue(.main)
+
+    AsyncFunction("setDragEscapeCapture") { [weak self] (active: Bool) in
+      guard let self else { return }
+      if let monitor = self.dragEscapeMonitor { NSEvent.removeMonitor(monitor) }
+      self.dragEscapeMonitor = nil
+      guard active else { return }
+      let emit: ([String: Any]) -> Void = { [weak self] body in self?.sendEvent("onAppEvent", body) }
+      self.dragEscapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+        let modifiers = event.modifierFlags.intersection([.command, .option, .control, .shift])
+        guard event.keyCode == 53 || event.charactersIgnoringModifiers == "\u{1b}", modifiers.isEmpty else { return event }
+        emit(["type": "dragEscape"])
         return nil
       }
     }.runOnQueue(.main)
@@ -1324,6 +1343,26 @@ let installTextFieldSelectAll: Void = {
     if let editor = field.currentEditor() { editor.selectAll(sender) } else { field.selectText(sender) }
   }
   class_addMethod(NSTextField.self, #selector(NSText.selectAll(_:)), imp_implementationWithBlock(block), "v@:@")
+}()
+
+let installInputSourceKeys: Void = {
+  let processKeyBindings = NSSelectorFromString("processInputKeyBindings:")
+  let keyDown = #selector(NSResponder.keyDown(with:))
+  guard NSTextInputContext.responds(to: processKeyBindings), let method = class_getInstanceMethod(NSTextView.self, keyDown) else { return }
+  typealias KeyDown = @convention(c) (NSTextView, Selector, NSEvent) -> Void
+  typealias ProcessKeyBindings = @convention(c) (AnyClass, Selector, NSEvent) -> ObjCBool
+  let original = unsafeBitCast(method_getImplementation(method), to: KeyDown.self)
+  let process = unsafeBitCast(NSTextInputContext.method(for: processKeyBindings), to: ProcessKeyBindings.self)
+  let inputSourceKeys: Set<UInt16> = [UInt16(kVK_JIS_Eisu), UInt16(kVK_JIS_Kana)]
+  let block: @convention(block) (NSTextView, NSEvent) -> Void = { view, event in
+    if inputSourceKeys.contains(event.keyCode) {
+      _ = process(NSTextInputContext.self, processKeyBindings, event)
+    } else {
+      original(view, keyDown, event)
+    }
+  }
+  let imp = imp_implementationWithBlock(block)
+  if !class_addMethod(NSTextView.self, keyDown, imp, method_getTypeEncoding(method)) { method_setImplementation(method, imp) }
 }()
 
 let installScrollViewInsetFix: Void = {

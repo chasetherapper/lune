@@ -59,8 +59,17 @@ public struct FileKeyStore: SyncKeyStore {
   public func save(_ secret: Data, account: String) -> Bool {
     do {
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-      try secret.write(to: url(account), options: [.atomic])
-      try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url(account).path)
+      let destination = url(account)
+      let temporary = directory.appendingPathComponent(".sync-key-\(account).\(getpid()).tmp")
+      unlink(temporary.path)
+      let fd = open(temporary.path, O_CREAT | O_EXCL | O_WRONLY | O_NOFOLLOW | O_CLOEXEC, 0o600)
+      guard fd >= 0 else { return false }
+      let wrote = fchmod(fd, 0o600) == 0 && secret.withUnsafeBytes { write(fd, $0.baseAddress, $0.count) } == secret.count
+      close(fd)
+      guard wrote, rename(temporary.path, destination.path) == 0 else {
+        unlink(temporary.path)
+        return false
+      }
       return true
     } catch {
       return false

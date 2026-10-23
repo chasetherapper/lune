@@ -1,166 +1,119 @@
 <p align="center">
-  <img src="apps/site/src/assets/app-icon.png" width="128" height="128" alt="Ardia's app icon">
+  <img src="apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_256x256_2x.png" width="128" height="128" alt="Lune's app icon: a painted crescent moon over blue hills on cream">
 </p>
 
-<h1 align="center">Touch grass.</h1>
+<h1 align="center">Lune</h1>
 
 <p align="center">
-  Arc’s sidebar and Dia’s polish on real Chromium.<br>
-  Free and open source. Ads and trackers stay out.
+  A personal fork of <a href="https://github.com/mantrakp04/ardia">Ardia</a>, the macOS browser with Arc's sidebar and Dia's polish on real Chromium.<br>
+  Built from source on your own Mac. No account, no telemetry, no update server.
 </p>
 
-<h3 align="center">
-  <a href="https://github.com/mantrakp04/ardia/releases/latest/download/Ardia-0.2.39.dmg">Download Ardia 0.2.39 for Mac</a>
-</h3>
+## What's different from Ardia
 
-<p align="center">
-  109 MB DMG · macOS 14 Sonoma or later · Apple Silicon · Notarized by Apple<br>
-  Like your paint wet? <a href="https://ardia.dev/nightly">The nightly</a> has every fix the day it’s made, smudges and all.<br>
-  <a href="https://ardia.dev">ardia.dev</a> · <a href="https://ardia.dev/release-notes">What’s new</a> · <a href="https://github.com/mantrakp04/ardia/releases">All releases</a> · <a href="https://discord.gg/TdhuXrbcA6">Discord</a>
-</p>
+- **Collapse to icons.** Settings › Tabs › Sidebar button: *Hides the sidebar* (Ardia's behaviour) or *Collapses to icons*. Collapsed, ⌘S and the sidebar button shrink the sidebar to a 72 pt rail of pinned tiles and tab icons. Hover an icon for its card, and swipe sideways on the rail to switch profiles.
+- **Roomier sidebar.** Tab rows are 38 pt tall with 4 pt between them (Ardia matches Dia's 34 and 3).
+- **A quieter address field.** In the sidebar layout, the address sits in a soft tint with no outline.
+- **A livelier hover card.** The favicon sits in a tile, the buttons rise in one after another, lift on hover and squeeze when pressed.
+- **Theme editor.** A reworked theme editor with gradient and Liquid Glass looks.
+- **Its own name and icon.** Lune everywhere you look, and a painted crescent over blue hills, in the style of Ardia's sun.
+- **Nothing phones home.** No update feed, no remote kill switches, no telemetry or crash reports, no release-notes page after updates. Feedback and source links point to this repo.
 
-<p align="center">
-  <img src="apps/site/src/assets/shots/window.webp" alt="The Ardia window in light mode: pinned tiles and tabs in the sidebar, and Wikipedia’s article on The Hay Wain open on the right.">
-</p>
+Everything else is Ardia's: profiles, split view, Little Lune (⌥⌘N), the command bar, uBlock Origin built in, the Chrome Web Store, iCloud sync, importers and the rest. The feature-by-feature list is in [docs/dia-feature-parity.md](docs/dia-feature-parity.md).
 
-## Lose the toolbar.
+## It's actually Chromium
 
-Move the address bar into the sidebar and the page runs all the way to the top of the window.
-
-<img src="apps/site/src/assets/shots/address-sidebar.webp" alt="Ardia with the address bar in the sidebar under the traffic lights and Wikipedia running to the top of the window.">
-
-## Two pages, one window.
-
-Drag a tab onto the page. Up to three panes, side by side or stacked.
-
-<img src="apps/site/src/assets/shots/split.webp" alt="Ardia in split view: MDN on the left, Wikipedia on the right, both in one window.">
-
-## Refuses to leave the picture.
-
-Switch tabs mid-video and it floats along in the corner. Go back to its tab and it slips back into the page.
-
-<img src="apps/site/src/assets/shots/pip.webp" alt="Ardia on Wikipedia’s article about Big Buck Bunny, while the film keeps playing in a small floating window at the bottom right.">
-
-## Your extensions come along.
-
-The Chrome Web Store just works, its button says Add to Ardia, and Sync takes them to your other Macs.
-
-<img src="apps/site/src/assets/shots/extensions.webp" alt="Dark Reader’s page on the Chrome Web Store, open in Ardia, with an Add to Ardia button.">
-
-## Ads and trackers stay out.
-
-The full uBlock Origin is built in, cookie banners included. Google’s pings are compiled out. Crash reports are
-opt-in and never carry your sites or searches.
-
-## Also in there
-
-- **Work stays at work.** Each profile keeps its own logins, history, extensions and colour. Swipe the sidebar to switch.
-- **Little Ardia.** ⌥⌘N opens a small window with one page and no sidebar.
-- **Groups on contact.** Drop a tab on a tab and they’re a group, named for you.
-- **Moves in for you.** Bookmarks, history, passwords and logins from Chrome, Safari, Firefox, Arc, Dia and five more. Arc’s spaces, pinned tabs and themes too.
-- **Paints like Arc.** Gradient themes per profile: up to three colours, some grain, some blur.
-- **Syncs through your iCloud.** End-to-end encrypted, in a folder in your own iCloud Drive. No server of ours in the middle.
-- **Command bar.** ⌘L finds tabs, history and bookmarks, does your sums, and knows doc.new and 16 friends.
-- **Tidies up.** ⌥⌘K sweeps the tabs you haven’t touched into Recently Cleaned.
-- **Clean links.** Copy a link and the tracking junk stays behind.
-- **Naps when you do.** Background tabs past your latest five freeze, and sleep after half an hour.
-- **Sits still.** Idles under half a percent of CPU with a tab open.
-- **Updates itself.** Quietly, then shows you what changed.
-
-## It’s actually Chromium.
-
-Not WebKit. Not Electron. Every window is Chrome’s own, so sites, extensions and DevTools behave like they do in Chrome.
-
-| Part | Details | Status |
-| --- | --- | --- |
-| Engine | Chromium 155, on Chrome’s own framework. | ✓ Yes |
-| De-Googled | Google’s background services stripped out. | ✓ Yes |
-| H.264 and AAC | The codecs Chromium leaves out. | ✓ Yes |
-| DevTools | Docked, with device mode. Like Chrome. | ✓ Yes |
-| Sync | End-to-end encrypted, through your own iCloud Drive. | ✓ Yes |
-| Translate | On your Mac. Nothing leaves it. | ✓ macOS 26 |
-| Passkeys | Touch ID yes. iCloud Keychain waits on Apple. | ~ Partly |
-| Widevine | Google hasn’t signed off. So no Netflix. | ✗ Not yet |
-| Intel Macs | Apple Silicon only. | ✗ No |
-
-<h3 align="center">
-  <a href="https://github.com/mantrakp04/ardia/releases/latest/download/Ardia-0.2.39.dmg">Download Ardia 0.2.39</a>
-</h3>
-
-<p align="center">
-  It’s 109 MB and one drag into Applications.<br>
-  Not on a Mac? Watch › Custom › Releases up top and GitHub tells you when it is.
-</p>
+Not WebKit, not Electron. Every window is Chrome's own (Chromium 155 through Ardia's engine, built on [Helium](https://github.com/imputnet/helium)), so sites, extensions and DevTools behave as they do in Chrome. Apple Silicon only.
 
 ---
 
 # Build it yourself
 
-A macOS browser that looks and feels like [Dia](https://diabrowser.com): Chrome's own framework from our
-patched Chromium with our layer on top (ArdiaCore), an Expo + React Native macOS shell, and Metal shaders
-reconstructed from Dia's own New Tab effects.
-
 ```
 apps/
   browser/            Expo + react-native-macos app (UI in src/, Xcode project in macos/)
 packages/
-  ardiacore/             The engine: Chromium 155's framework with our layer (Chrome tabs hosted in our views), JS API in src/
+  ardiacore/          The engine: Chromium 155's framework with Ardia's layer (Chrome tabs hosted in our views), JS API in src/
   shell/              Native menu bar + shortcuts → JS, windows, SF Symbols, native primitives
   shaders/            Metal: New Tab effects + grained OKLab window backdrop
   import/             Import from other browsers (bookmarks, history, passwords, Arc spaces)
-  core/               Pure TS: omnibox input → URL, suggestions, Dia-style breadcrumbs (tested)
+  sync/               End-to-end encrypted sync through your own iCloud Drive
+  core/               Pure TS: omnibox input → URL, suggestions, breadcrumbs (tested)
 ```
-
 
 ## Run it
 
-Requires Xcode 26+, CocoaPods, Node 22.13+ (pinned in `.nvmrc`), pnpm 11.
+Requires Xcode 26+, CocoaPods, Node 22.13+ (pinned in `.nvmrc`), pnpm 11, and an Apple Silicon Mac.
 
 ```bash
 pnpm install
-```
-
-The engine (Chrome's framework, built from our patched Chromium) comes prebuilt: with no local engine build, the app's
-build downloads the one matching your checkout's `engine/` (about 110 MB, once; Apple Silicon only) and checks it
-against `packages/ardiacore/prebuilt-engines.tsv`. Every release whose engine changed publishes one. If `main`'s engine
-is newer than the last release's, work from a release tag (`v0.2.30`, say), or run
-`packages/ardiacore/scripts/fetch-engine.sh --nearest` to build against the newest prebuilt anyway. Passkeys and saved
-cards need our team ID and won't work in a build signed by anyone else.
-
-To change the engine itself (anything under `engine/`), build it from source: Chrome's framework from our patched
-Chromium tree in `~/chromium-build` (Chromium 155.0.8059.84 with the patch series in `engine/patches`;
-`docs/engine-build.md` › "Rebuilding", then `engine/chromium/apply.sh`,
-`engine/ardiacore/apply.sh` and `autoninja -C out/Release_GN_arm64 chrome_framework`; the first build takes about 2
-hours). The app's build stages it from there when it exists.
-
-```bash
 pnpm pods
 ```
 
-In one terminal, start Metro:
+**The engine.** Building Chromium yourself takes hours and a large source tree, so use the prebuilt engine that Ardia
+publishes with its releases. `packages/ardiacore/prebuilt-engines.tsv` maps each `engine/` tree to one, and
+`packages/ardiacore/scripts/fetch-engine.sh` downloads it into `apps/browser/build-ardiacore/prebuilt/<hash>/`
+(`--nearest` takes the newest one if your tree has moved past the last release).
+
+**Metro**, in one terminal:
 
 ```bash
 pnpm dev
 ```
 
-In another, build and launch the Debug app (on its own data, `~/Library/Application Support/Ardia Dev`, or
-`ARDIA_DATA_DIR`):
+**The app**, in another (from `apps/browser`). Without Ardia's Apple team, sign ad hoc, point the build at the
+prebuilt engine, and use a copy of `macos/Ardia-macOS/Ardia.entitlements` without the `keychain-access-groups` key
+(an ad-hoc app with that key is killed at launch):
 
 ```bash
-pnpm macos
+ARDIACORE_FRAMEWORK="$PWD/build-ardiacore/prebuilt/<hash>/Chromium Framework.framework" \
+xcodebuild -workspace macos/Ardia.xcworkspace -scheme Ardia-macOS -derivedDataPath build-lune \
+  -destination 'platform=macOS,arch=arm64' -configuration Debug -quiet \
+  CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+  CODE_SIGN_ENTITLEMENTS=<path to that entitlements copy>
 ```
 
-Other tasks: `pnpm typecheck`, `pnpm test`, `pnpm shaders:check` (compiles the embedded Metal offline),
-`pnpm build` (Release `.app` with a Hermes bytecode bundle in `apps/browser/build/`).
-Signed releases (DMG, Sparkle zip and appcast): `scripts/release.sh <version>`, see `docs/releasing.md`.
+**Launch it.** A Debug build needs a data folder and quits at once without one, so a double-click or Finder's Open With
+does nothing:
+
+```bash
+open -n --env ARDIA_DATA_DIR="$HOME/Library/Application Support/Ardia Dev" \
+  apps/browser/build-lune/Build/Products/Debug/Lune.app
+```
+
+Once it's running, Open With and dragging files onto its Dock icon work. The interface reloads from Metro as you edit;
+native changes need a rebuild. Passwords, passkeys and saved cards need a real signing team, so they don't work in an
+ad-hoc build.
+
+Checks: `pnpm --filter @ardia/browser typecheck`, and the tests with
+`cd apps/browser && node --no-warnings --import ./src/test-loader.mjs --test "src/**/*.test.mjs"`.
 
 Shortcuts: ⌘T new tab, ⌘L command bar, ⌘W close, ⇧⌘T reopen, ⌘S sidebar, ⌘[ / ⌘] back/forward,
 ⌘R reload, ⌘1–⌘9 select tab, ⌃Tab cycle.
 
+## Keeping up with Ardia
+
+Lune gets its security fixes from Ardia's engine, so merge Ardia regularly:
+
+```bash
+git fetch upstream
+git merge upstream/main
+git push origin main
+```
+
+`origin` is this repo and `upstream` is [mantrakp04/ardia](https://github.com/mantrakp04/ardia). After a merge, fetch
+the prebuilt engine that matches the new `engine/` tree and rebuild. Lune is only as current as its last merge, and
+it depends on Ardia continuing to publish prebuilt engines.
+
+**Where the name lives.** The interface reads it from `APP_NAME` in `apps/browser/src/lib/appName.ts`, and native code
+from the bundle name (`PRODUCT_NAME` in the Xcode project). The bundle id is `com.chaseballard.lune`. Keychain items
+("Ardia Safe Storage" and friends) and the "Ardia Sync" iCloud folder keep Ardia's names on purpose: they identify
+existing data, and the engine expects them.
+
 ## How Dia's New Tab light works
 
 Dia 1.50 turns this light off along with its rebrand (a painted mark, a single-colour power-up band
-and a halo around the bar; `docs/dia-spec.md` › "1.50 Sunglow"), and so does Ardia. The
+and a halo around the bar; `docs/dia-spec.md` › "1.50 Sunglow"), and so does Lune (as Ardia did). The
 reconstruction left the tree with it: `git show f2c0e251:packages/shaders/ios/AreaLightView.swift`.
 
 These findings come from disassembling the Metal libraries in `Dia.app` (v1.49.1) with
@@ -215,15 +168,10 @@ Only math and colour values are reused. No Dia images, fonts or binaries are cop
 - **Shaders** are Metal source embedded in Swift and compiled at runtime (once per class, cached). This
   keeps the pods free of a metallib build phase.
 
-## Status
-
-Feature parity with Dia (everything but its AI) is tracked row by row in
-[docs/dia-feature-parity.md](docs/dia-feature-parity.md); releases and their notes are at
-[ardia.dev/release-notes](https://ardia.dev/release-notes).
-
 ## License
 
-Ardia as distributed is licensed under the [GNU General Public License v3](LICENSE), because its engine is built
-with GPL-3.0 patches. Ardia's own source files are under the [Apache License 2.0](LICENSE.Apache-2.0). It builds on
-Chromium, carries a few of the Chromium Embedded Framework's patches to Chromium (BSD-3-Clause), and bundles uBlock
-Origin, each under its own license; see [NOTICE](NOTICE). Every release links its source.
+Lune is a fork of [Ardia](https://github.com/mantrakp04/ardia) by Mantra Patel. As distributed it is licensed under the
+[GNU General Public License v3](LICENSE), because its engine is built with GPL-3.0 patches; Ardia's own source files are
+under the [Apache License 2.0](LICENSE.Apache-2.0). It builds on Chromium and Helium, carries a few of the Chromium
+Embedded Framework's patches to Chromium (BSD-3-Clause), and bundles uBlock Origin, each under its own license; see
+[NOTICE](NOTICE). "Ardia" is the original project's name; Lune is not affiliated with it.

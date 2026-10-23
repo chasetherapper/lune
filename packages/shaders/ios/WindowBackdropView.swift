@@ -169,8 +169,20 @@ struct ThemeGradient: Equatable {
   var grain: CGFloat = 0
   var texture = "grain"
   var appearance = "auto"
+  var material = "gradient"
+  var glassTint: SIMD4<Float>?
 
   var isEmpty: Bool { colors.isEmpty }
+  var isGlass: Bool { material == "glass" }
+
+  var glassTintColor: NSColor? {
+    guard let c = glassTint, c.w > 0 else { return nil }
+    return NSColor(srgbRed: CGFloat(c.x), green: CGFloat(c.y), blue: CGFloat(c.z), alpha: CGFloat(min(max(c.w, 0), 1)))
+  }
+
+  static func parseTint(_ flat: [Double]) -> SIMD4<Float>? {
+    flat.count >= 4 ? SIMD4(Float(flat[0]), Float(flat[1]), Float(flat[2]), Float(flat[3])) : nil
+  }
 
   static func parse(_ flat: [Double]) -> [SIMD4<Float>] {
     stride(from: 0, to: flat.count - 3, by: 4).prefix(3).map {
@@ -383,12 +395,15 @@ final class WindowTreatmentView: NSView {
       if custom?.appearance != oldValue?.appearance { appearance = custom?.forcedAppearance }
       if custom?.colors != oldValue?.colors { themeLayer.setColors(custom?.colors ?? []) }
       updateAppearance()
+      updateMaterial()
       updateTint()
     }
   }
 
   private let blur = NSVisualEffectView()
+  private var glass: NSView?
   private let overlay = NSView()
+  private let glassFallbackTint = CALayer()
   private let baseTint = CALayer()
   private let gradient = CAGradientLayer()
   private let themeLayer = ArcGradientLayer()
@@ -402,12 +417,13 @@ final class WindowTreatmentView: NSView {
     updateState()
     NotificationCenter.default.addObserver(self, selector: #selector(updateState), name: WindowActivity.changed, object: nil)
     overlay.wantsLayer = true
-    for layer in [baseTint, gradient, themeLayer, grain] as [CALayer] { overlay.layer?.addSublayer(layer) }
+    for layer in [glassFallbackTint, baseTint, gradient, themeLayer, grain] as [CALayer] { overlay.layer?.addSublayer(layer) }
     themeLayer.isHidden = true
+    glassFallbackTint.isHidden = true
     grain.opacity = 0
     gradient.startPoint = CGPoint(x: 0.5, y: 0)
     gradient.endPoint = CGPoint(x: 0.5, y: 1)
-    for layer in [baseTint, gradient] as [CALayer] {
+    for layer in [glassFallbackTint, baseTint, gradient] as [CALayer] {
       layer.actions = ["bounds": NSNull(), "position": NSNull(), "backgroundColor": NSNull(), "colors": NSNull(), "opacity": NSNull(), "hidden": NSNull()]
     }
     addSubview(blur)
@@ -423,13 +439,20 @@ final class WindowTreatmentView: NSView {
   override func layout() {
     super.layout()
     blur.frame = bounds
+    glass?.frame = bounds
     overlay.frame = bounds
-    for layer in [baseTint, gradient, themeLayer, grain] as [CALayer] { layer.frame = overlay.bounds }
+    for layer in [glassFallbackTint, baseTint, gradient, themeLayer, grain] as [CALayer] { layer.frame = overlay.bounds }
     themeLayer.flipped = overlay.isFlipped
+  }
+
+  override func viewWillMove(toWindow newWindow: NSWindow?) {
+    super.viewWillMove(toWindow: newWindow)
+    if newWindow !== window { WindowGlass.set(window, clear: false, from: self) }
   }
 
   override func viewDidMoveToWindow() {
     super.viewDidMoveToWindow()
+    updateMaterial()
     activity.attach(to: window)
     updateGrain()
   }
@@ -456,6 +479,28 @@ final class WindowTreatmentView: NSView {
     gradient.opacity = dark ? 0.5 : 0.75
     let base = dark ? NSColor(white: 0, alpha: 0.4) : NSColor(white: 1, alpha: 0.8)
     baseTint.backgroundColor = (custom.map { (dark ? NSColor.black : NSColor.white).withAlphaComponent($0.baseAlpha) } ?? base).cgColor
+  }
+
+  private func updateMaterial() {
+    let on = custom?.isGlass == true
+    if #available(macOS 26.0, *) {
+      if on, glass == nil {
+        let view = NSGlassEffectView(frame: bounds)
+        addSubview(view, positioned: .above, relativeTo: blur)
+        glass = view
+      }
+      if let view = glass as? NSGlassEffectView {
+        view.isHidden = !on
+        view.style = .clear
+        view.tintColor = on ? custom?.glassTintColor : nil
+      }
+      blur.isHidden = on
+      glassFallbackTint.isHidden = true
+      WindowGlass.set(window, clear: on, from: self)
+    } else {
+      glassFallbackTint.isHidden = !on
+      glassFallbackTint.backgroundColor = on ? custom?.glassTintColor?.cgColor : nil
+    }
   }
 
   private func updateGrain() {
@@ -507,16 +552,26 @@ final class WindowTreatmentView: NSView {
 }
 
 final class ThemeSwatchView: ExpoView {
+  private static let still: [String: CAAction] = [
+    "bounds": NSNull(), "position": NSNull(), "contents": NSNull(), "hidden": NSNull(), "backgroundColor": NSNull(),
+    "colors": NSNull(), "startPoint": NSNull(), "endPoint": NSNull(), "sublayers": NSNull(),
+  ]
+  private let ground = CALayer()
   private let themeLayer = ArcGradientLayer()
+  private let blobLayer = CALayer()
   private let grain = GrainLayer()
   private let pad = CALayer()
+  private let frost = CALayer()
+  private let dots = CALayer()
   private var padLightness: Double = -1
+  private var blobs: [Double] = []
+  private var dotsColor = ""
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     wantsLayer = true
-    pad.actions = ["bounds": NSNull(), "position": NSNull(), "contents": NSNull(), "hidden": NSNull()]
-    for sub in [themeLayer, pad, grain] as [CALayer] { layer?.addSublayer(sub) }
+    for sub in [ground, blobLayer, pad, frost, dots] { sub.actions = Self.still }
+    for sub in [ground, themeLayer, blobLayer, pad, frost, grain, dots] as [CALayer] { layer?.addSublayer(sub) }
     pad.contentsGravity = .resize
     pad.isHidden = true
     grain.opacity = 0
@@ -536,6 +591,67 @@ final class ThemeSwatchView: ExpoView {
     grain.texture = value
   }
 
+  func setGround(_ hex: String) {
+    ground.backgroundColor = Self.color(hex)
+  }
+
+  func setFrost(_ hex: String) {
+    frost.backgroundColor = Self.color(hex)
+  }
+
+  func setDots(_ hex: String) {
+    guard hex != dotsColor else { return }
+    dotsColor = hex
+    dots.backgroundColor = Self.color(hex).flatMap(Self.dotPattern)
+  }
+
+  func setBlobs(_ flat: [Double]) {
+    guard flat != blobs else { return }
+    blobs = flat
+    layoutBlobs()
+  }
+
+  private func layoutBlobs() {
+    let w = max(bounds.width, 1), h = max(bounds.height, 1)
+    let count = blobs.count / 7
+    var layers = (blobLayer.sublayers ?? []).compactMap { $0 as? CAGradientLayer }
+    while layers.count < count {
+      let g = CAGradientLayer()
+      g.type = .radial
+      g.actions = Self.still
+      blobLayer.addSublayer(g)
+      layers.append(g)
+    }
+    for (i, g) in layers.enumerated() {
+      g.isHidden = i >= count
+      guard i < count else { continue }
+      let b = Array(blobs[(i * 7)..<(i * 7 + 7)])
+      let r = CGFloat(b[2]) * w
+      let cx = CGFloat(b[0]) * w, cy = (isFlipped ? CGFloat(b[1]) : 1 - CGFloat(b[1])) * h
+      g.frame = CGRect(x: cx - r, y: cy - r, width: 2 * r, height: 2 * r)
+      g.startPoint = CGPoint(x: 0.5, y: 0.5)
+      g.endPoint = CGPoint(x: 1, y: 1)
+      let c = { (a: Double) in CGColor(srgbRed: CGFloat(b[3]), green: CGFloat(b[4]), blue: CGFloat(b[5]), alpha: CGFloat(a)) }
+      g.colors = [c(b[6]), c(b[6] * 0.55), c(b[6] * 0.18), c(0)]
+      g.locations = [0, 0.4, 0.72, 1]
+    }
+  }
+
+  static func color(_ hex: String) -> CGColor? {
+    guard let c = SIMD4<Float>(hex: hex) else { return nil }
+    return CGColor(srgbRed: CGFloat(c.x), green: CGFloat(c.y), blue: CGFloat(c.z), alpha: CGFloat(c.w))
+  }
+
+  static func dotPattern(_ color: CGColor) -> CGColor? {
+    let image = NSImage(size: NSSize(width: 9, height: 9), flipped: false) { _ in
+      guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+      ctx.setFillColor(color)
+      ctx.fillEllipse(in: CGRect(x: 3.5, y: 3.5, width: 2, height: 2))
+      return true
+    }
+    return NSColor(patternImage: image).cgColor
+  }
+
   func setPadLightness(_ value: Double) {
     guard value != padLightness else { return }
     padLightness = value
@@ -545,8 +661,9 @@ final class ThemeSwatchView: ExpoView {
 
   override func layout() {
     super.layout()
-    for sub in [themeLayer, pad, grain] as [CALayer] { sub.frame = bounds }
+    for sub in [ground, themeLayer, blobLayer, pad, frost, grain, dots] as [CALayer] { sub.frame = bounds }
     themeLayer.flipped = isFlipped
+    layoutBlobs()
   }
 
   static func hsl(_ h: Double, _ s: Double, _ l: Double) -> (Double, Double, Double) {
@@ -586,5 +703,103 @@ final class ThemeSwatchView: ExpoView {
                    space: CGColorSpace(name: CGColorSpace.sRGB)!,
                    bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
                    provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+  }
+}
+
+final class WindowGlass: NSObject {
+  private static var entries: [ObjectIdentifier: WindowGlass] = [:]
+  private static var observing = false
+  private static let rootKey = "backgroundColor"
+
+  private weak var window: NSWindow?
+  private weak var root: NSView?
+  private var holders = Set<ObjectIdentifier>()
+  private var background: NSColor?
+  private var opaque = true
+  private var rootFill: Any?
+  private var clearing = false
+
+  static func set(_ window: NSWindow?, clear: Bool, from view: NSView) {
+    guard let window else { return }
+    let key = ObjectIdentifier(window), me = ObjectIdentifier(view)
+    if !clear {
+      guard let entry = entries[key], entry.holders.remove(me) != nil, entry.holders.isEmpty else { return }
+      entry.restore()
+      entry.unwatchRoot()
+      entries[key] = nil
+      return
+    }
+    observe()
+    let entry = entries[key] ?? WindowGlass(window)
+    entries[key] = entry
+    entry.holders.insert(me)
+    if entry.root == nil { entry.watchRoot(from: view) }
+    entry.apply()
+  }
+
+  private init(_ window: NSWindow) {
+    self.window = window
+    background = window.backgroundColor
+    opaque = window.isOpaque
+  }
+
+  private var fullScreen: Bool { window?.styleMask.contains(.fullScreen) == true }
+
+  private func apply() {
+    guard let window, !fullScreen else { return restore() }
+    window.isOpaque = false
+    window.backgroundColor = .clear
+    clearRoot()
+  }
+
+  private func restore() {
+    guard let window else { return }
+    window.isOpaque = opaque
+    if let background { window.backgroundColor = background }
+    if let root, clearing {
+      clearing = false
+      root.setValue(rootFill, forKey: Self.rootKey)
+      clearing = true
+    }
+  }
+
+  private func clearRoot() {
+    guard let root, root.value(forKey: Self.rootKey) != nil else { return }
+    rootFill = root.value(forKey: Self.rootKey)
+    root.setValue(nil, forKey: Self.rootKey)
+  }
+
+  private func watchRoot(from view: NSView) {
+    var v: NSView? = view
+    while let cur = v, !NSStringFromClass(type(of: cur)).hasSuffix("RootView") { v = cur.superview }
+    guard let found = v, found.responds(to: NSSelectorFromString("setBackgroundColor:")) else { return }
+    root = found
+    clearing = true
+    found.addObserver(self, forKeyPath: Self.rootKey, options: [.new], context: nil)
+  }
+
+  private func unwatchRoot() {
+    if let root, clearing { root.removeObserver(self, forKeyPath: Self.rootKey) }
+    clearing = false
+    root = nil
+  }
+
+  override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+    guard clearing, !fullScreen, !holders.isEmpty else { return }
+    DispatchQueue.main.async { [weak self] in
+      guard let self, self.clearing, !self.holders.isEmpty, !self.fullScreen else { return }
+      self.clearRoot()
+    }
+  }
+
+  private static func observe() {
+    guard !observing else { return }
+    observing = true
+    for name in [NSWindow.willEnterFullScreenNotification, NSWindow.didExitFullScreenNotification] {
+      NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { note in
+        guard let window = note.object as? NSWindow, let entry = entries[ObjectIdentifier(window)] else { return }
+        if name == NSWindow.willEnterFullScreenNotification { entry.restore() } else { entry.apply() }
+      }
+    }
   }
 }

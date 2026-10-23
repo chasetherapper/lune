@@ -10,7 +10,7 @@ import { IconButton, useHover } from "../primitives";
 import { isPinnedRow } from "../../store/model";
 import { awayFromPin } from "../../store/organize";
 import { clickTab, commitRename, endRename, startRename, tabTitle } from "./actions";
-import { useDragItem, useDropOnto } from "./dnd";
+import { useDragItem, useDropOnto, type OntoSide } from "./dnd";
 import { useShift, type EntryMotion } from "./entryMotion";
 import { dismissHover, useRowHover } from "./hover";
 import { openTabMenu } from "./menus";
@@ -49,7 +49,7 @@ export const TabRowItem = memo(function TabRowItem({
   );
 });
 
-export const TabRow = memo(function TabRow({ tabId, onto = false, shift = null }: { tabId: string; onto?: boolean; shift?: Animated.Value | null }) {
+export const TabRow = memo(function TabRow({ tabId, onto = null, shift = null }: { tabId: string; onto?: OntoSide | null; shift?: Animated.Value | null }) {
   const theme = useTheme();
   const tokens = useSidebarTokens();
   const windowId = useWindowId();
@@ -151,9 +151,20 @@ export const TabRow = memo(function TabRow({ tabId, onto = false, shift = null }
           </Pressable>
         </ContextMenuArea>
       </MouseArea>
+      {onto ? <SplitDropSide side={onto} /> : null}
     </View>
   );
 });
+
+function SplitDropSide({ side }: { side: OntoSide }) {
+  const theme = useTheme();
+  return (
+    <View pointerEvents="none" style={{ position: "absolute", top: 0, bottom: 0, width: "50%", [side]: 0 }}>
+      <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, borderRadius: 10, backgroundColor: theme.accent, opacity: 0.18 }} />
+      <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, borderRadius: 10, borderWidth: 1.5, borderColor: theme.accent }} />
+    </View>
+  );
+}
 
 export function RenameField({
   initial,

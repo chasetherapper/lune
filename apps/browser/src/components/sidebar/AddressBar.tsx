@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { FadeLabel } from "@ardia/shell";
-import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+import { Pressable, View, type ViewStyle } from "react-native";
 import { layout, useTheme } from "../../lib/theme";
 import { useBrowser } from "../../store/browser";
 import { useActiveTabId, useTabLive, useWindowId } from "../../store/hooks";
@@ -11,9 +11,10 @@ import { useHistoryAvailability } from "../layout/history";
 import { toolbarPalette, type ToolbarPalette } from "../layout/toolbarColors";
 import { ToolbarButton, type ButtonHit } from "../layout/controls";
 import { addressBarInSidebar, setUrlAnchor, SIDEBAR_FIELD } from "../layout/windowLayout";
-import { GlassFill, liquidGlass } from "../glass";
+import { GlassFill, useGlassControls } from "../glass";
 import { useHover } from "../primitives";
 import { GLYPH, HistoryButton, ReloadButton, UrlField, useToolbarTab } from "../Toolbar";
+import { sidebarToggleTitle } from "../layout/iconRail";
 import { ARC_LIGHTS_CENTER, HEADER_TOOLS, navButtonsFitting, type HeaderButton } from "../layout/dockMotion";
 
 const BUTTON = layout.toolbarButton;
@@ -27,6 +28,7 @@ export function SidebarHeaderTools({ width }: { width: number }) {
   const tab = useToolbarTab(useActiveTabId());
   const palette = toolbarPalette(useTheme(), null);
   const toggle = useBrowser((s) => s.settings.showSidebarButton !== false);
+  const toggleTitle = useBrowser((s) => sidebarToggleTitle(s));
   const { buttons, step } = navButtonsFitting(width, BUTTON, toggle);
   const shown = tab ? buttons : [];
   const last = width - EDGE - BUTTON / 2;
@@ -45,7 +47,7 @@ export function SidebarHeaderTools({ width }: { width: number }) {
           icon="sidebar.left"
           size={GLYPH}
           onPress={() => useBrowser.getState().toggleSidebar(windowId)}
-          tooltip="Auto-Hide Tabs (⌘S)"
+          tooltip={`${toggleTitle} (⌘S)`}
         />
       )}
       {tab ? <NavigationButtons tab={tab} palette={palette} buttons={shown} slots={at.slice(toggle ? 1 : 0).map(place)} /> : null}
@@ -142,6 +144,7 @@ function PageField({ tab, windowId, width }: { tab: NonNullable<ReturnType<typeo
 
 function EmptyField({ windowId }: { windowId: string }) {
   const theme = useTheme();
+  const glassy = useGlassControls();
   const { hovered, hoverProps } = useHover();
   const open = () => useBrowser.getState().openPanel(windowId, "");
   return (
@@ -151,14 +154,12 @@ function EmptyField({ windowId }: { windowId: string }) {
           style={{
             height: SIDEBAR_FIELD.height,
             borderRadius: SIDEBAR_FIELD.radius,
-            borderWidth: StyleSheet.hairlineWidth * 2,
-            borderColor: liquidGlass ? "transparent" : theme.pinnedRestingStroke,
-            backgroundColor: liquidGlass ? undefined : hovered ? theme.tabHover : theme.pinnedResting,
+            backgroundColor: glassy ? undefined : hovered ? theme.addressFieldHover : theme.addressField,
             justifyContent: "center",
             paddingLeft: 10,
           }}
         >
-          {liquidGlass ? <GlassFill radius={SIDEBAR_FIELD.radius} border={StyleSheet.hairlineWidth * 2} fill={hovered ? theme.tabHover : theme.pinnedResting} /> : null}
+          {glassy ? <GlassFill radius={SIDEBAR_FIELD.radius} fill={hovered ? theme.addressFieldHover : theme.addressField} /> : null}
           <FadeLabel text="Search or enter address" fontSize={13} color={theme.placeholder} fadeWidth={14} style={{ height: 18, marginLeft: -2 }} />
         </View>
       </Pressable>

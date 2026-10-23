@@ -32,6 +32,7 @@ import { useTabDrag } from "./layout/tabDrag";
 import { SadTab, StatusBubble } from "./layout/PaneOverlays";
 import { DropTargets, SplitDividers, SplitToast } from "./layout/SplitChrome";
 import { SplitEmptyState } from "./layout/SplitEmptyState";
+import { SPLIT_PANE_BAR_HEIGHT, SplitPaneBar } from "./layout/SplitPaneBar";
 import { pagerFor } from "./layout/profilePager";
 import { openFromPage } from "./layout/openFromPage";
 import { dockMoving, useDockMotion } from "./layout/dockMotion";
@@ -39,6 +40,8 @@ import { FrozenPage } from "./layout/frozenPage";
 import { holderOf } from "../store/pinShare";
 import { setCardAnchor, setUrlAnchor, useAddressBarInSidebar, useTabLayout, useToolbarExtensionsWidths } from "./layout/windowLayout";
 import { NewTabPage } from "./NewTabPage";
+import { railShown } from "./layout/iconRail";
+import { PersonalizePanelHost } from "./ntp/Personalize";
 import { EmptyCard } from "./EmptyCard";
 import { InternalPage } from "./pages";
 import { AutofillPrompt, BlockedPopupsPrompt, ExternalAppPrompt, PasswordPrompt, PermissionPrompt, answerExternalApp, shouldPromptForPopups, showAutofillPrompt, showPasswordPrompt } from "./site/Prompts";
@@ -71,7 +74,7 @@ export function ContentCard() {
   const addressInSidebar = useAddressBarInSidebar();
   const small = useBrowser((s) => isSmallWindow(s.windows[windowId]));
   const hideWhileScrolling = useBrowser((s) => s.settings.hideToolbarWhileScrolling);
-  const showSidebarButton = useBrowser((s) => s.settings.showSidebarButton !== false);
+  const showSidebarButton = useBrowser((s) => s.settings.showSidebarButton !== false && !railShown(s, windowId));
   const barMode = useBookmarksBarMode(windowId);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
@@ -282,6 +285,7 @@ export function ContentCard() {
       {split && !fullscreenTab && <SplitDividers split={split} dividers={dividers} width={size.width} height={size.height} />}
       {!fullscreenTab && <DropTargets panes={panes} origin={origin} />}
       <SplitToast windowId={windowId} />
+      <PersonalizePanelHost windowId={windowId} />
     </View>
   );
 }
@@ -351,6 +355,7 @@ const TabPane = memo(function TabPane({
     if (visible) revealToolbar(tabId);
   }, [visible]);
   const chromeInWindow = hideBar && windowToolbar;
+  const paneBar = !toolbar && !small && !fullscreen && inSplit;
   useLayoutEffect(() => {
     if (chromeInWindow) publishPaneChrome(windowId, { tabId, mode, bar: motion.bar, fade: motion.fade });
   });
@@ -370,7 +375,13 @@ const TabPane = memo(function TabPane({
         backgroundColor: visible && !fullscreen ? theme.card : undefined,
       }}
     >
-      {!toolbar || fullscreen || autoLayout ? null : visible && !windowToolbar ? (
+      {paneBar ? (
+        visible ? (
+          <SplitPaneBar tabId={tabId} windowId={windowId} focused={focused} />
+        ) : (
+          <View style={{ height: SPLIT_PANE_BAR_HEIGHT }} />
+        )
+      ) : !toolbar || fullscreen || autoLayout ? null : visible && !windowToolbar ? (
         <Toolbar tabId={tabId} geometry={geometry} windowId={windowId} inSplit={inSplit} focused={focused || !inSplit} />
       ) : visible ? (
         <ToolbarBackdrop tabId={tabId} />
@@ -399,9 +410,9 @@ const TabPane = memo(function TabPane({
                 <PasswordPrompt tabId={tabId} right={POPOVER_MARGIN} top={POPOVER_MARGIN} />
                 <AutofillPrompt tabId={tabId} right={POPOVER_MARGIN} top={POPOVER_MARGIN} />
                 {!newTabShown && <ExternalAppPrompt tabId={tabId} left={Math.max(POPOVER_MARGIN, Math.min(geometry.urlLeft, frame.width - 348))} top={POPOVER_MARGIN} />}
-                <SiteControls tabId={tabId} open={popover === "siteControls"} {...(toolbar ? { right: POPOVER_MARGIN } : { left: POPOVER_MARGIN })} top={POPOVER_MARGIN} />
-                {popover === "popups" && <BlockedPopupsPrompt tabId={tabId} {...(toolbar ? { right: POPOVER_MARGIN } : { left: POPOVER_MARGIN })} top={POPOVER_MARGIN} />}
-                {popover === "zoom" && <ZoomPopover tabId={tabId} {...(toolbar ? { right: POPOVER_MARGIN } : { left: POPOVER_MARGIN })} top={POPOVER_MARGIN} />}
+                <SiteControls tabId={tabId} open={popover === "siteControls"} {...(toolbar || paneBar ? { right: POPOVER_MARGIN } : { left: POPOVER_MARGIN })} top={POPOVER_MARGIN} />
+                {popover === "popups" && <BlockedPopupsPrompt tabId={tabId} {...(toolbar || paneBar ? { right: POPOVER_MARGIN } : { left: POPOVER_MARGIN })} top={POPOVER_MARGIN} />}
+                {popover === "zoom" && <ZoomPopover tabId={tabId} {...(toolbar || paneBar ? { right: POPOVER_MARGIN } : { left: POPOVER_MARGIN })} top={POPOVER_MARGIN} />}
                 <SharePicker tabId={tabId} paneWidth={frame.width} />
                 {!newTabShown && <DeviceChooser tabId={tabId} left={Math.max(POPOVER_MARGIN, Math.min(geometry.urlLeft, frame.width - 348))} top={POPOVER_MARGIN} />}
                 <CastPicker tabId={tabId} paneWidth={frame.width} />

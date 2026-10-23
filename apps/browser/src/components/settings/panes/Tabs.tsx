@@ -33,6 +33,19 @@ export function TabsPane() {
       <Group style={{ marginTop: 14 }}>
         {toggle("hideToolbarWhileScrolling", "tabs.hideToolbarWhileScrolling")}
         {!top && toggle("showSidebarButton", "tabs.showSidebarButton")}
+        {!top && (
+          <Row anchor="tabs.sidebarCollapse">
+            <PopUp
+              value={settings.sidebarCollapse ?? "hide"}
+              options={[
+                { value: "hide", title: "Hides the sidebar" },
+                { value: "icons", title: "Collapses to icons" },
+              ]}
+              onChange={(v) => update({ sidebarCollapse: v })}
+              minWidth={160}
+            />
+          </Row>
+        )}
       </Group>
 
       <SectionHeader title="General" />

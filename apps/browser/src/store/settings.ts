@@ -36,6 +36,7 @@ export type Settings = {
   warnBeforeMovingTabsToProfile: boolean;
   tabReorderHaptics: boolean;
   extendWebsiteColor: boolean;
+  glassControls: boolean;
   cmdClickCreatesTabGroup: boolean;
   optShiftClickOpensInGroup: boolean;
   autoGroupMeetingTabs: boolean;
@@ -47,6 +48,7 @@ export type Settings = {
   sidebarMediaControls: boolean;
   sidebarWidth: number;
   showSidebarButton: boolean;
+  sidebarCollapse: "hide" | "icons";
   batterySaverWhen: BatterySaverWhen;
   extensionSidePanelWidth: number;
 
@@ -90,6 +92,7 @@ export const DEFAULT_SETTINGS: Settings = {
   warnBeforeMovingTabsToProfile: true,
   tabReorderHaptics: true,
   extendWebsiteColor: true,
+  glassControls: false,
   cmdClickCreatesTabGroup: true,
   optShiftClickOpensInGroup: true,
   autoGroupMeetingTabs: true,
@@ -101,6 +104,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sidebarMediaControls: true,
   sidebarWidth: 190,
   showSidebarButton: true,
+  sidebarCollapse: "hide",
   batterySaverWhen: "lowBattery",
   extensionSidePanelWidth: 360,
   showFullUrl: false,

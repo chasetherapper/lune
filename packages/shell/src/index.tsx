@@ -150,6 +150,7 @@ export type MenuItem =
       id: string;
       title: string;
       symbol?: string;
+      showSymbol?: boolean;
       swatch?: string;
       swatchDark?: string;
       key?: string;

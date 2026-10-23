@@ -2,17 +2,20 @@ import { Symbol } from "@ardia/shell";
 import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "../../lib/theme";
+import { useAddressBarInSidebar } from "../layout/windowLayout";
 import { useHover } from "../primitives";
 import { closeAllTabs } from "./menus";
 
 const CLEAR_DIVIDER_HEIGHT = 16;
+const CLEAR_DIVIDER_ROOM = 6;
 
 export const ClearDivider = memo(function ClearDivider({ windowId, spaced }: { windowId: string; spaced: boolean }) {
   const theme = useTheme();
+  const addressBar = useAddressBarInSidebar();
   const { hovered, hoverProps } = useHover();
   const clear = () => closeAllTabs(windowId);
   return (
-    <View style={{ height: CLEAR_DIVIDER_HEIGHT, marginTop: spaced ? 7 : 0, flexDirection: "row", alignItems: "center", paddingLeft: 9, paddingRight: 9 }}>
+    <View style={{ height: CLEAR_DIVIDER_HEIGHT, marginTop: (spaced ? 7 : 0) + (addressBar ? CLEAR_DIVIDER_ROOM : 0), marginBottom: CLEAR_DIVIDER_ROOM, flexDirection: "row", alignItems: "center", paddingLeft: 9, paddingRight: 9 }}>
       <View style={{ flex: 1, height: 1, backgroundColor: theme.divider }} />
       <View {...hoverProps}>
         <Pressable tooltip="Clear unpinned tabs" accessibilityRole="button" accessibilityLabel="Clear unpinned tabs" onAccessibilityTap={clear} onPress={clear}>

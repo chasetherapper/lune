@@ -5,7 +5,8 @@ import { useBrowser } from "../../../store/browser";
 import { tabLayoutOf } from "../../../store/model";
 import type { Settings } from "../../../store/settings";
 import { useHover } from "../../primitives";
-import { SectionHeader, useFormColors } from "../controls";
+import { liquidGlass } from "../../glass";
+import { Row, SectionHeader, Toggle, useFormColors } from "../controls";
 import { APP_ICON_SIZE, appIconChoices } from "../paneData";
 import { store, useResource } from "../resources";
 
@@ -30,8 +31,18 @@ export function AppearancePane() {
         ))}
       </View>
       <AddressBarPicker />
+      {liquidGlass ? <GlassControlsRow /> : null}
       <AppIconPicker />
     </View>
+  );
+}
+
+function GlassControlsRow() {
+  const glassControls = useBrowser((s) => s.settings.glassControls);
+  return (
+    <Row anchor="appearance.glassControls">
+      <Toggle value={glassControls} onChange={(v) => useBrowser.getState().updateSettings({ glassControls: v })} />
+    </Row>
   );
 }
 

@@ -27,18 +27,22 @@ export const sidebarUi = () => useSidebarUi.getState();
 export const setSidebarUi = (patch: Partial<SidebarUi>) => useSidebarUi.setState(patch);
 
 const rows = new Map<string, Map<string, View>>();
+const railRows = new Map<string, Map<string, View>>();
 
-export function registerRow(windowId: string, id: string, view: View | null) {
-  let byId = rows.get(windowId);
-  if (!byId) rows.set(windowId, (byId = new Map()));
+function register(into: Map<string, Map<string, View>>, windowId: string, id: string, view: View | null) {
+  let byId = into.get(windowId);
+  if (!byId) into.set(windowId, (byId = new Map()));
   if (view) byId.set(id, view);
   else byId.delete(id);
 }
 
+export const registerRow = (windowId: string, id: string, view: View | null) => register(rows, windowId, id, view);
+export const registerRailRow = (windowId: string, id: string, view: View | null) => register(railRows, windowId, id, view);
+
 export const rowIds = (windowId: string): string[] => [...(rows.get(windowId)?.keys() ?? [])];
 
 export function rowView(windowId: string, id: string): View | undefined {
-  return rows.get(windowId)?.get(id);
+  return railRows.get(windowId)?.get(id) ?? rows.get(windowId)?.get(id);
 }
 
 export function measureRow(windowId: string, id: string): Promise<Anchor | null> {

@@ -4,6 +4,8 @@ const { useBrowser } = await import("../../store/browser.ts");
 const { sidebarEntries } = await import("./entries.ts");
 const { entriesHeight, entriesWithin, entryHeight, firstPaintEntries, startsOffScreen, FIRST_PAINT_HEIGHT } = await import("./geometry.ts");
 await import("../../test-native-stub.mjs");
+const { layout } = await import("../../lib/theme.ts");
+const GAP = layout.rowGap;
 
 const S = () => useBrowser.getState();
 const profile = { id: "default", name: "Personal", color: "plum", icon: null, createdAt: 0 };
@@ -27,7 +29,7 @@ test("entriesWithin counts the entries that start inside the height, a group as 
   const list = hydrate();
   assert.deepEqual(list.slice(0, 4), ["t:t0", "t:t1", "g:g", "t:t7"]);
   const s = S();
-  const pitch = entryHeight(s, "w", "default", "t:t0") + 3;
+  const pitch = entryHeight(s, "w", "default", "t:t0") + GAP;
   assert.equal(entriesWithin(s, "w", "default", list, 0), 0);
   assert.equal(entriesWithin(s, "w", "default", list, 1), 1);
   assert.equal(entriesWithin(s, "w", "default", list, pitch), 1);
@@ -35,8 +37,8 @@ test("entriesWithin counts the entries that start inside the height, a group as 
   const group = entryHeight(s, "w", "default", "g:g");
   assert.ok(group > 5 * pitch);
   assert.equal(entriesWithin(s, "w", "default", list, 2 * pitch + 1), 3);
-  assert.equal(entriesWithin(s, "w", "default", list, 2 * pitch + group + 3), 3);
-  assert.equal(entriesWithin(s, "w", "default", list, 2 * pitch + group + 4), 4);
+  assert.equal(entriesWithin(s, "w", "default", list, 2 * pitch + group + GAP), 3);
+  assert.equal(entriesWithin(s, "w", "default", list, 2 * pitch + group + GAP + 1), 4);
   assert.equal(entriesWithin(s, "w", "default", list, 1e6), list.length);
 });
 

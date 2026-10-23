@@ -18,7 +18,7 @@ export function ProfileSwipe({ children }: { children: ReactNode }) {
   );
 }
 
-export function ProfileSwipeArea({ surface, style, pageWidth }: { surface: "sidebar" | "strip"; style: StyleProp<ViewStyle>; pageWidth?: number }) {
+export function ProfileSwipeArea({ surface, style, pageWidth }: { surface: "sidebar" | "strip" | "rail"; style: StyleProp<ViewStyle>; pageWidth?: number }) {
   const windowId = useWindowId();
   usePagerSurface(windowId);
   const [previous, next, multiple] = useBrowser(
@@ -96,5 +96,6 @@ if (__DEV__) {
     received: () => received.splice(0),
     sidebar: (windowId: string) => devAreas.get(`sidebar:${windowId}`)?.current ?? null,
     strip: (windowId: string) => devAreas.get(`strip:${windowId}`)?.current ?? null,
+    rail: (windowId: string) => devAreas.get(`rail:${windowId}`)?.current ?? null,
   };
 }

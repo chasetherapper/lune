@@ -19,10 +19,11 @@ import { openModeFor, openUrl } from "./bookmarks/actions";
 import { closePane, openSplitPane, showSplitMenu } from "./layout/splitActions";
 import { toolbarPalette, useEasedColor, type ToolbarPalette } from "./layout/toolbarColors";
 import { setToolbarExtensionsWidth, SIDEBAR_FIELD } from "./layout/windowLayout";
+import { sidebarToggleTitle } from "./layout/iconRail";
 import { showUrlBarMenu } from "./omnibox/paste";
 import { useHover } from "./primitives";
 import { ToolbarExtensions, useToolbarExtensionsWidth } from "./extensions/ToolbarExtensions";
-import { GlassFill, liquidGlass } from "./glass";
+import { GlassFill, useGlassControls } from "./glass";
 import { TranslateButton } from "./site/TranslateControls";
 import { ZoomIndicator } from "./site/ZoomControls";
 
@@ -64,6 +65,7 @@ export function Toolbar({
   const palette = toolbarPalette(theme, website);
   const band = useEasedColor(bare ? null : palette.background);
   const history = useHistoryAvailability(tabId);
+  const toggleTitle = useBrowser((s) => sidebarToggleTitle(s));
   const extensionsWidth = useToolbarExtensionsWidth(windowId);
   useEffect(() => setToolbarExtensionsWidth(windowId, extensionsWidth), [windowId, extensionsWidth]);
   const dim = useRef(new Animated.Value(focused ? 1 : 0.5)).current;
@@ -98,7 +100,7 @@ export function Toolbar({
             icon="sidebar.left"
             size={GLYPH}
             onPress={() => useBrowser.getState().toggleSidebar(windowId)}
-            tooltip="Auto-Hide Tabs (⌘S)"
+            tooltip={`${toggleTitle} (⌘S)`}
           />
         )}
         <HistoryButton style={at.back} tabId={tab.id} windowId={tab.windowId} direction={-1} disabled={!history.back} palette={palette} onFocus={focus} />
@@ -268,6 +270,7 @@ export const UrlField = memo(function UrlField({
   sidebar?: { height: number; progress: number | null; accessory?: ReactNode };
 }) {
   const theme = useTheme();
+  const glassy = useGlassControls();
   const showFullUrl = useSettings((s) => s.showFullUrl);
   const bookmarked = useIsBookmarked(tab.url);
   const insecure = usePage(tab.id, insecureLevel);
@@ -306,17 +309,15 @@ export const UrlField = memo(function UrlField({
           ? {
               height: sidebar.height,
               borderRadius: SIDEBAR_FIELD.radius,
-              borderWidth: StyleSheet.hairlineWidth * 2,
-              borderColor: liquidGlass ? "transparent" : theme.pinnedRestingStroke,
-              backgroundColor: liquidGlass ? undefined : hovered ? theme.tabHover : theme.pinnedResting,
+              backgroundColor: glassy ? undefined : hovered ? theme.addressFieldHover : theme.addressField,
               overflow: "hidden",
             }
-          : { height: 30, borderRadius: 8, backgroundColor: hovered && !liquidGlass ? palette.pill : undefined },
+          : { height: 30, borderRadius: 8, backgroundColor: hovered && !glassy ? palette.pill : undefined },
       ]}
     >
-      {liquidGlass ? (
+      {glassy ? (
         sidebar ? (
-          <GlassFill radius={SIDEBAR_FIELD.radius} border={StyleSheet.hairlineWidth * 2} fill={hovered ? theme.tabHover : theme.pinnedResting} />
+          <GlassFill radius={SIDEBAR_FIELD.radius} fill={hovered ? theme.addressFieldHover : theme.addressField} />
         ) : (
           <GlassFill radius={8} fill={hovered ? palette.pressed : palette.pill} dark={palette.background ? palette.text.startsWith("#FFFFFF") : undefined} />
         )
@@ -335,7 +336,7 @@ export const UrlField = memo(function UrlField({
       <Pressable onPress={() => openPanel(tab.url)} style={{ flex: 1, height: sidebar?.height ?? 30, justifyContent: "center", paddingLeft: insecure ? LOCK.gap : sidebar ? 10 : urlTextLeft(false) }}>
         {sidebar ? (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, fontWeight: "500", color: palette.text }}>
+            <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, color: palette.text }}>
               {host}
             </Text>
             <FadeLabel

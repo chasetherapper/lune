@@ -6,6 +6,7 @@ import { layout, useTheme } from "../../lib/theme";
 import { useBrowser } from "../../store/browser";
 import { useWindowId } from "../../store/hooks";
 import type { TabPlacement } from "../../store/organize";
+import { dropTabIntoSplit } from "../layout/splitActions";
 import { SLIDE } from "../layout/stripReorder";
 import { beginTabDrag, cancelTabDrag, endTabDrag, setDragPicture, updateTabDrag, useTabDrag } from "../layout/tabDrag";
 import { useClipped, type ClipSource } from "./entryMotion";
@@ -38,7 +39,7 @@ type Item = ItemSpec & {
 type Drop =
   | { type: "tabs"; placement: TabPlacement }
   | { type: "group"; placement: { pinned: boolean; beforeId?: string | null } }
-  | { type: "onto"; targetId: string }
+  | { type: "onto"; targetId: string; side: OntoSide }
   | { type: "none" };
 
 export type Ghost = { item: Item; count: number; width: number; height: number; position: Animated.ValueXY; landing?: boolean };
@@ -54,8 +55,9 @@ const measure = (view: View | null): Promise<Frame | null> =>
     ? new Promise((resolve) => view.measureInWindow((x, y, w, h) => resolve(w || h ? { x, y, w, h } : null)))
     : Promise.resolve(null);
 
-type Marks = { sources: Set<string>; dropInto: string | null; onto: string | null; landing: string | null; pins: boolean; pinCount: number };
-const NO_MARKS: Marks = { sources: new Set(), dropInto: null, onto: null, landing: null, pins: false, pinCount: 0 };
+export type OntoSide = "left" | "right";
+type Marks = { sources: Set<string>; dropInto: string | null; onto: string | null; ontoSide: OntoSide | null; landing: string | null; pins: boolean; pinCount: number };
+const NO_MARKS: Marks = { sources: new Set(), dropInto: null, onto: null, ontoSide: null, landing: null, pins: false, pinCount: 0 };
 const noMarks = create<Marks>()(() => NO_MARKS);
 const NO_DROP: Drop = { type: "none" };
 
@@ -216,7 +218,7 @@ class DragController {
       const ids = sources.flatMap((i) => i.tabIds);
       if (drop.type === "tabs") s.placeTabs(ids, drop.placement);
       else if (drop.type === "group" && sources[0]!.groupId) s.moveGroup(sources[0]!.groupId, drop.placement);
-      else if (drop.type === "onto") s.groupOnto(ids, drop.targetId);
+      else if (drop.type === "onto") dropTabIntoSplit(ids[0]!, drop.targetId, drop.side);
     }
     this.reset();
     if (!spot || !ghost) {
@@ -263,7 +265,7 @@ class DragController {
     this.external = 0;
     suppressHover(false);
     this.setSources(new Set());
-    this.marks.setState({ dropInto: null, onto: null, pins: false, pinCount: 0 });
+    this.marks.setState({ dropInto: null, onto: null, ontoSide: null, pins: false, pinCount: 0 });
   }
 
   private landingSpot(drop: Drop): Promise<{ x: number; y: number } | null> | null {
@@ -391,8 +393,10 @@ class DragController {
         const before = rows.find((r) => cy(r) > y && firstTab(r) !== null);
         drop = { type: "tabs", placement: { pinned: true, row: true, beforeId: firstTab(before) } };
         gapKey = before?.key ?? "tail:pinnedRows";
-      } else if ((onto = tabsDrag && !this.external ? this.ontoTarget(live, y) : null)) {
-        drop = { type: "onto", targetId: this.items.get(onto)!.tabIds[0]! };
+      } else if ((onto = tabsDrag && !this.external && dragged.size === 1 ? this.ontoTarget(live, y) : null)) {
+        const target = this.items.get(onto)!;
+        const f = this.shown(target);
+        drop = { type: "onto", targetId: target.tabIds[0]!, side: x < f.x + f.w / 2 ? "left" : "right" };
         gapKey = this.gapKey;
         pitch = this.pitch;
       } else {
@@ -422,7 +426,7 @@ class DragController {
     this.drop = drop;
     this.into = into;
     const pins = drop.type === "tabs" && drop.placement.pinned && !drop.placement.row;
-    this.marks.setState({ dropInto: into, onto, pins, pinCount: pins ? count : 0 });
+    this.marks.setState({ dropInto: into, onto, ontoSide: drop.type === "onto" ? drop.side : null, pins, pinCount: pins ? count : 0 });
     if (gapKey !== this.gapKey) {
       const prev = this.gapKey && this.items.get(this.gapKey);
       if (prev && prev.section === "tiles" && this.gridBase && !this.pinning) prev.gap.setValue(0);
@@ -522,7 +526,7 @@ export function DragScope({ enabled, children }: { enabled: boolean; children: R
 
 export const useDragController = () => useContext(DragContext) ?? undefined;
 export const useDropInto = () => useStore(useContext(DragContext)?.marks ?? noMarks, (m) => m.dropInto);
-export const useDropOnto = (key: string) => useStore(useContext(DragContext)?.marks ?? noMarks, (m) => m.onto === key);
+export const useDropOnto = (key: string) => useStore(useContext(DragContext)?.marks ?? noMarks, (m) => (m.onto === key ? m.ontoSide : null));
 export const useDropPins = () => useStore(useContext(DragContext)?.marks ?? noMarks, (m) => m.pins);
 export const usePinnedCount = (tabIds: string[]) =>
   useStore(useContext(DragContext)?.marks ?? noMarks, (m) => tabIds.reduce((n, id) => n + (m.sources.has(`t:${id}`) ? 0 : 1), 0) + m.pinCount);

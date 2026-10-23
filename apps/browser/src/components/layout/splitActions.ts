@@ -80,6 +80,8 @@ export async function showSplitMenu(tabId: string) {
   const full = split.tabIds.length >= MAX_SPLIT_PANES;
   const stacked = slotsOf(split).some((slot) => slot.length === 2 && slot.includes(tabId));
   const items: MenuItem[] = [
+    { id: "separate", title: "Separate All Tabs", symbol: "rectangle.split.3x1" },
+    { separator: true },
     { id: "add", title: horizontal ? "Add Vertical Split View" : "Add Horizontal Split View", symbol: horizontal ? "rectangle.split.2x1" : "rectangle.split.1x2", enabled: !full, key: "=", modifiers: ["control", "shift"] },
     { id: "bottom", title: horizontal ? "Add Bottom Split" : "Add Right Split", symbol: horizontal ? "rectangle.bottomhalf.inset.filled" : "rectangle.righthalf.inset.filled", enabled: !full && !stacked },
     { separator: true },
@@ -89,11 +91,10 @@ export async function showSplitMenu(tabId: string) {
     { id: "convert", title: horizontal ? "Convert to Vertical Split View" : "Convert to Horizontal Split View", symbol: horizontal ? "rectangle.split.1x2" : "rectangle.split.2x1" },
     { separator: true },
     { id: "remove", title: "Remove from Split View", symbol: "rectangle.portrait.and.arrow.right" },
-    { id: "separate", title: "Separate All Tabs", symbol: "rectangle.split.3x1" },
     { separator: true },
     { id: "close", title: "Close Pane", symbol: "xmark" },
   ];
-  const choice = await showMenu(items);
+  const choice = await showMenu(items.map((item) => ("separator" in item ? item : { ...item, showSymbol: true })));
   const st = store();
   switch (choice) {
     case "add":

@@ -97,6 +97,11 @@ const ROWS: Record<SettingsPane, Section[]> = {
           keywords: ["auto hide", "compact"],
         },
         showSidebarButton: { title: "Show sidebar button", description: "⌘S and View › Auto-Hide Tabs still hide and show the sidebar.", keywords: ["toggle sidebar"] },
+        sidebarCollapse: {
+          title: "Sidebar button",
+          description: "What the sidebar button and ⌘S do: hide the sidebar, or shrink it to a narrow column of tab icons, as in Arc.",
+          keywords: ["collapse sidebar", "icons", "compact sidebar", "auto hide", "focus mode", "rail"],
+        },
       },
     },
     {
@@ -157,6 +162,10 @@ const ROWS: Record<SettingsPane, Section[]> = {
       rows: { theme: { title: "Appearance Theme", description: "Also in View › Appearance. Incognito windows are always dark.", keywords: ["dark mode", "light mode", "automatic", "night", "system"] } },
     },
     { section: "Address Bar", rows: { addressBar: { title: "Address Bar", description: "In the toolbar or in the sidebar.", keywords: ["url bar", "location bar", "toolbar"] } } },
+    {
+      section: "Controls",
+      rows: { glassControls: { title: "Liquid Glass address bar and pinned tabs", description: "Raised glass instead of flat tinted fills. Needs macOS 26.", keywords: ["glass", "flat", "pinned tiles", "url field", "material"] } },
+    },
     { section: "App Icon", rows: { appIcon: { title: "App Icon", description: "Shown in the Dock and the app switcher. The Dock keeps it after you quit.", keywords: ["dock icon", "logo"] } } },
   ],
   privacy: [

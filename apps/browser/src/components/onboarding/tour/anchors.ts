@@ -6,6 +6,7 @@ import { splitOf } from "../../../store/splits";
 import { toolbarGeometry, type Rect } from "../../layout/geometry";
 import { useUrlAnchors } from "../../layout/windowLayout";
 import { measureRow } from "../../sidebar/state";
+import { sidebarOnScreen } from "../../layout/iconRail";
 
 export type TourAnchor = "commandBar" | "page" | "tabs" | "sidebarButton";
 
@@ -33,7 +34,7 @@ export async function locateAnchor(windowId: string, id: TourAnchor): Promise<Re
       return measure(registered.get(key(windowId, id)));
     case "tabs": {
       const tabId = activeTabId(s, windowId);
-      return w.sidebarOpen && tabLayout === "sidebar" && tabId ? measureRow(windowId, tabId) : null;
+      return sidebarOnScreen(s, windowId) && tabLayout === "sidebar" && tabId ? measureRow(windowId, tabId) : null;
     }
     case "sidebarButton": {
       const url = useUrlAnchors.getState()[windowId];

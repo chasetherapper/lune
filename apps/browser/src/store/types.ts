@@ -11,12 +11,16 @@ export type ThemeMode = "auto" | "light" | "dark";
 
 export type ThemeTexture = "grain" | "sand" | "denim" | "tweed";
 
+export type ThemeMaterial = "gradient" | "glass";
+
 export type ThemeLook = {
   stops: ThemeStop[];
   intensity: number;
   grain: number;
   texture: ThemeTexture;
   translucency: number;
+  lightness?: number;
+  material?: ThemeMaterial;
 };
 
 export type ProfileTheme = ThemeLook & {

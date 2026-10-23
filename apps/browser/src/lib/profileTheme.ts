@@ -1,7 +1,9 @@
-import type { ProfileTheme, ThemeColor, ThemeLook, ThemeMode, ThemeStop, ThemeTexture } from "../store/types";
+import type { ProfileTheme, ThemeColor, ThemeLook, ThemeMaterial, ThemeMode, ThemeStop, ThemeTexture } from "../store/types";
 
 export const MAX_THEME_STOPS = 3;
 export const PAD_LIGHTNESS = 0.6;
+export const MIN_LIGHTNESS = 0.06;
+export const MAX_LIGHTNESS = 0.95;
 export const THEME_TEXTURES: ThemeTexture[] = ["grain", "sand", "denim", "tweed"];
 
 const TEXTURE_STRENGTH: Record<ThemeTexture, number> = { grain: 0.8, sand: 0.15, denim: 0.6, tweed: 0.4 };
@@ -14,6 +16,8 @@ export type ThemeBackdropProps = {
   themeGrain: number;
   themeTexture: ThemeTexture;
   themeAppearance: ThemeMode;
+  themeMaterial: ThemeMaterial;
+  themeGlassTint: number[];
 };
 
 export const PRESET_BACKDROP: ThemeBackdropProps = {
@@ -23,6 +27,8 @@ export const PRESET_BACKDROP: ThemeBackdropProps = {
   themeGrain: 0,
   themeTexture: "grain",
   themeAppearance: "auto",
+  themeMaterial: "gradient",
+  themeGlassTint: [],
 };
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -46,12 +52,18 @@ export function rgbToHsl(r: number, g: number, b: number): [number, number, numb
   return [h / 6, s, l];
 }
 
-export function padColor(x: number, y: number): ThemeColor {
+export const clampLightness = (v: number) => Math.min(MAX_LIGHTNESS, Math.max(MIN_LIGHTNESS, v));
+
+export function themeLightness(theme: Pick<ThemeLook, "lightness">): number {
+  return clampLightness(theme.lightness ?? PAD_LIGHTNESS);
+}
+
+export function padColor(x: number, y: number, lightness = PAD_LIGHTNESS): ThemeColor {
   const dx = clamp01(x) - 0.5, dy = clamp01(y) - 0.5;
   let hue = Math.atan2(dy, dx) / (2 * Math.PI);
   if (hue < 0) hue += 1;
   const sat = Math.min(1, Math.hypot(dx, dy) / 0.5);
-  const [r, g, b] = hslToRgb(hue, sat, PAD_LIGHTNESS);
+  const [r, g, b] = hslToRgb(hue, sat, clampLightness(lightness));
   return { r, g, b, a: 1 };
 }
 
@@ -130,11 +142,28 @@ export function arcLayerAlpha(intensity: number): number {
   return 0.2 + 0.55 * clamp01(intensity);
 }
 
+export const isGlass = (theme: Pick<ThemeLook, "material">) => theme.material === "glass";
+
+export function glassTintAlpha(theme: ProfileTheme): number {
+  const i = clamp01(theme.intensity);
+  return i <= 0 ? 0 : 0.06 + 0.44 * i;
+}
+
+export function glassFrostAlpha(theme: ProfileTheme, dark: boolean): number {
+  return dark ? 0.12 + 0.6 * (1 - clamp01(theme.translucency)) : 0.14 + 0.66 * (1 - clamp01(theme.translucency));
+}
+
+export function glassGradientAlpha(theme: ProfileTheme): number {
+  return theme.stops.length > 1 ? 0.3 * clamp01(theme.intensity) : 0;
+}
+
 export function themeLayerAlpha(theme: ProfileTheme): number {
+  if (isGlass(theme)) return glassGradientAlpha(theme);
   return 1 - clamp01(theme.translucency) * (1 - arcLayerAlpha(theme.intensity));
 }
 
 export function themeUnderlayAlpha(theme: ProfileTheme, dark: boolean): number {
+  if (isGlass(theme)) return glassFrostAlpha(theme, dark);
   const arc = Math.min(arcLayerAlpha(theme.intensity), 0.5);
   return clamp01(theme.translucency) * (dark ? 0.35 * arc : arc);
 }
@@ -155,7 +184,14 @@ export function themeBackdrop(theme: ProfileTheme, dark: boolean): ThemeBackdrop
     themeGrain: themeGrainAlpha(theme),
     themeTexture: theme.texture,
     themeAppearance: theme.mode,
+    themeMaterial: isGlass(theme) ? "glass" : "gradient",
+    themeGlassTint: isGlass(theme) ? glassTint(theme) : [],
   };
+}
+
+export function glassTint(theme: ProfileTheme): number[] {
+  const [r, g, b] = themeArea(theme, 0.5, 0.5, 1, 1);
+  return [clamp01(r), clamp01(g), clamp01(b), glassTintAlpha(theme)];
 }
 
 export function themeAccent(theme: ProfileTheme): string {
@@ -170,14 +206,25 @@ export function opaqueThemeTint(theme: ProfileTheme, dark: boolean): [string, st
   const a = themeLayerAlpha(theme);
   const u = themeUnderlayAlpha(theme, dark);
   const blur = dark ? 0.16 : 0.92;
+  if (isGlass(theme)) {
+    const tint = glassTint(theme), ta = tint[3]!;
+    const frosted = tint.slice(0, 3).map((v) => u * (dark ? 0 : 1) + (1 - u) * (ta * v + (1 - ta) * blur));
+    const glassOver = (c: number[]) => toHex(c.map((v, i) => a * clamp01(v) + (1 - a) * frosted[i]!));
+    return [glassOver(themeArea(theme, 0, 0, 1, 1)), glassOver(themeArea(theme, 1, 1, 1, 1))];
+  }
   const under = (dark ? 0 : 1) * u + blur * (1 - u);
   const over = (c: number[]) => toHex(c.map((v) => a * clamp01(v) + (1 - a) * under));
   return [over(themeArea(theme, 0, 0, 1, 1)), over(themeArea(theme, 1, 1, 1, 1))];
 }
 
 export function withStopAt(theme: ProfileTheme, index: number, x: number, y: number): ProfileTheme {
-  const stops = theme.stops.map((s, i) => (i === index ? { x, y, color: padColor(x, y) } : s));
+  const stops = theme.stops.map((s, i) => (i === index ? { x, y, color: padColor(x, y, themeLightness(theme)) } : s));
   return { ...theme, stops };
+}
+
+export function withLightness(theme: ProfileTheme, lightness: number): ProfileTheme {
+  const l = clampLightness(lightness);
+  return { ...theme, lightness: l, stops: theme.stops.map((s) => ({ ...s, color: padColor(s.x, s.y, l) })) };
 }
 
 export function withAddedStop(theme: ProfileTheme): ProfileTheme {
@@ -186,7 +233,7 @@ export function withAddedStop(theme: ProfileTheme): ProfileTheme {
   const angle = Math.atan2(last.y - 0.5, last.x - 0.5) + (2 * Math.PI) / 5;
   const radius = Math.max(0.3, Math.hypot(last.x - 0.5, last.y - 0.5));
   const x = 0.5 + radius * Math.cos(angle), y = 0.5 + radius * Math.sin(angle);
-  return { ...theme, stops: [...theme.stops, { x, y, color: padColor(x, y) }] };
+  return { ...theme, stops: [...theme.stops, { x, y, color: padColor(x, y, themeLightness(theme)) }] };
 }
 
 export function withoutStop(theme: ProfileTheme, index: number): ProfileTheme {
@@ -194,15 +241,30 @@ export function withoutStop(theme: ProfileTheme, index: number): ProfileTheme {
   return { ...theme, stops: theme.stops.filter((_, i) => i !== index) };
 }
 
-export function startingTheme(swatch: string): ProfileTheme {
+function swatchStops(swatch: string, lightness: number, minRadius: number): ThemeStop[] {
   const base = padPosition(hexColor(swatch));
   const angle = Math.atan2(base.y - 0.5, base.x - 0.5);
-  const radius = Math.max(0.3, Math.hypot(base.x - 0.5, base.y - 0.5));
+  const radius = Math.max(minRadius, Math.hypot(base.x - 0.5, base.y - 0.5));
   const stop = (offset: number): ThemeStop => {
     const x = 0.5 + radius * Math.cos(angle + offset), y = 0.5 + radius * Math.sin(angle + offset);
-    return { x, y, color: padColor(x, y) };
+    return { x, y, color: padColor(x, y, lightness) };
   };
-  return { stops: [stop(-0.45), stop(0.45)], intensity: 0.6, mode: "auto", grain: 0, texture: "grain", translucency: 1 };
+  return [stop(-0.45), stop(0.45)];
+}
+
+export function startingTheme(swatch: string, lightness?: number): ProfileTheme {
+  const theme: ProfileTheme = { stops: swatchStops(swatch, lightness ?? PAD_LIGHTNESS, 0.3), intensity: 0.6, mode: "auto", grain: 0, texture: "grain", translucency: 1 };
+  return lightness === undefined ? theme : { ...theme, lightness: clampLightness(lightness) };
+}
+
+export function swatchLightness(swatch: string): number {
+  const c = hexColor(swatch);
+  return clampLightness(rgbToHsl(c.r, c.g, c.b)[2]);
+}
+
+export function withSwatch(theme: ProfileTheme, swatch: string): ProfileTheme {
+  const lightness = swatchLightness(swatch);
+  return { ...theme, lightness, stops: swatchStops(swatch, lightness, 0) };
 }
 
 const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
@@ -235,6 +297,8 @@ function sanitizeLook(v: unknown): ThemeLook | null {
     grain: clamp01(num(t.grain, 0)),
     texture: THEME_TEXTURES.includes(t.texture as ThemeTexture) ? (t.texture as ThemeTexture) : "grain",
     translucency: clamp01(num(t.translucency, 1)),
+    ...(typeof t.lightness === "number" && Number.isFinite(t.lightness) ? { lightness: clampLightness(t.lightness) } : {}),
+    ...(t.material === "glass" ? { material: "glass" as const } : {}),
   };
 }
 

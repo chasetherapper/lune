@@ -4,7 +4,7 @@ import { Animated, Pressable, StyleSheet, View } from "react-native";
 import { closeTab } from "../../lib/actions";
 import { hex, layout, useTheme } from "../../lib/theme";
 import { useTileTheme, type TileTheme } from "../../lib/tileTheme";
-import { GlassFill, liquidGlass } from "../glass";
+import { GlassFill, useGlassControls } from "../glass";
 import { listTopGap, useAddressBarInSidebar } from "../layout/windowLayout";
 import { useBrowser } from "../../store/browser";
 import { useIsActiveTab, useTab, useTabLive, useWindowId } from "../../store/hooks";
@@ -149,6 +149,7 @@ function backToPinnedUrl(windowId: string, tabId: string) {
 
 const PinnedTile = memo(function PinnedTile({ tabId, width }: { tabId: string; width: number }) {
   const theme = useTheme();
+  const glassy = useGlassControls();
   const tokens = useSidebarTokens();
   const windowId = useWindowId();
   const tab = useTab(tabId);
@@ -182,7 +183,7 @@ const PinnedTile = memo(function PinnedTile({ tabId, width }: { tabId: string; w
               }}
             >
               {({ pressed }) =>
-                liquidGlass ? (
+                glassy ? (
                   <GlassTile tabId={tabId} width={width} active={active} selected={selected} hovered={hovered} pressed={pressed} tileTheme={tileTheme} />
                 ) : active && tileTheme ? (
                   <DockSelection

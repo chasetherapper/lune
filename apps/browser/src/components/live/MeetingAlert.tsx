@@ -9,6 +9,7 @@ import { useBrowser } from "../../store/browser";
 import { viewTabIds } from "../../store/model";
 import { IconButton } from "../primitives";
 import { measureRow, type Anchor } from "../sidebar/state";
+import { sidebarOnScreen } from "../layout/iconRail";
 import { OverlappingAvatars } from "./CalendarPreview";
 import { useLiveColors } from "./colors";
 import { SmallButton } from "./LiveItemCard";
@@ -27,7 +28,7 @@ function AlertCard({ event, windowId, windowWidth }: { event: CalendarEvent; win
   const colors = useLiveColors();
   const now = useNow(15_000);
   const calendarTab = useBrowser((s) => viewTabIds(s, windowId).find((id) => s.tabs[id]?.pinned && isCalendarUrl(s.tabs[id]!.pinnedUrl ?? s.tabs[id]!.url)));
-  const sidebarShown = useBrowser((s) => !!s.windows[windowId]?.sidebarOpen);
+  const sidebarShown = useBrowser((s) => sidebarOnScreen(s, windowId));
   const calendarName = useCalendar((s) => s.calendars.find((c) => c.id === event.calendarId)?.title);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const appear = useRef(new Animated.Value(0)).current;

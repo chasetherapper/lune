@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { switchOn } from "../../lib/killSwitches";
 import { ARC_LIGHTS_CENTER, LIGHTS_CENTER, lightsCenter, TOP_STRIP_LIGHTS_CENTER } from "./dockMotion";
+import { collapsesToIcons, RAIL_LIGHTS_X } from "./iconRail";
 import { layout } from "../../lib/theme";
 import { useBrowser, type BrowserState } from "../../store/browser";
 import { useWindowId } from "../../store/hooks";
@@ -15,7 +16,7 @@ export function addressBarInSidebar(s: BrowserState, windowId: string): boolean 
   return (
     !!w &&
     s.settings.addressBar === "sidebar" &&
-    (w.sidebarOpen || switchOn("sidebarSlide")) &&
+    (w.sidebarOpen || (switchOn("sidebarSlide") && !collapsesToIcons(s))) &&
     (w.tabLayout ?? s.settings.tabLayout) === "sidebar"
   );
 }
@@ -30,7 +31,9 @@ export function openingLightsCenter(s: BrowserState, windowId: string): [number,
   if (!w) return null;
   const open = w.sidebarOpen ?? true;
   if ((w.tabLayout ?? s.settings.tabLayout) === "top") return open ? [...TOP_STRIP_LIGHTS_CENTER] : lightsCenter(layout.sidebarWidth);
-  return lightsCenter(open ? 0 : (s.settings.sidebarWidth ?? layout.sidebarWidth), 0, s.settings.addressBar === "sidebar" ? ARC_LIGHTS_CENTER : LIGHTS_CENTER);
+  const base = s.settings.addressBar === "sidebar" ? ARC_LIGHTS_CENTER : LIGHTS_CENTER;
+  if (!open && collapsesToIcons(s)) return lightsCenter(base[0] - RAIL_LIGHTS_X, 0, base);
+  return lightsCenter(open ? 0 : (s.settings.sidebarWidth ?? layout.sidebarWidth), 0, base);
 }
 
 export const SIDEBAR_FIELD = { top: 46, height: layout.rowHeight, radius: 10 } as const;

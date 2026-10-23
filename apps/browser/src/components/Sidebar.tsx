@@ -5,7 +5,7 @@ import { switchOn } from "../lib/killSwitches";
 import { everySlowly } from "../lib/slowTimers";
 import { layout, ThemeScope, useTheme } from "../lib/theme";
 import { useBrowser } from "../store/browser";
-import { PageProfileContext, useSettings, useWindowId, useWindowProfileId } from "../store/hooks";
+import { PageProfileContext, useIsIncognito, useSettings, useWindowId, useWindowProfileId } from "../store/hooks";
 import { activeTabId } from "../store/model";
 import { downloadsIn } from "../store/ui";
 import { cleanedTabsFor, cleanUpCandidates } from "../store/organize";
@@ -14,9 +14,11 @@ import { listTopGap, SIDEBAR_FIELD, SIDEBAR_FOOTER_DOWNLOADS, SIDEBAR_HEADER_WIT
 import { SIDEBAR_PLAYER_HEIGHT, SidebarPlayer, useSidebarPlayerTab } from "./media/SidebarPlayer";
 import { HoverSlot } from "./HoverSlot";
 import { IconButton, useHover } from "./primitives";
+import { createProfile, switchProfile } from "../lib/actions";
 import { PROFILE_INDICATOR_X, ProfileIndicator } from "./ProfileIndicator";
 import { usePageStyle, usePagerPages } from "./layout/profilePager";
 import { PROFILE_DOTS_HEIGHT, ProfileDots, useProfileDotsShown } from "./profiles/ProfileDots";
+import { PERSONALIZE_BUTTON, PersonalizeButton } from "./ntp/Personalize";
 import { SidebarAddressRow, SidebarHeaderTools } from "./sidebar/AddressBar";
 import { ClearDivider } from "./sidebar/ClearDivider";
 import { DragGhost } from "./sidebar/DragGhost";
@@ -72,7 +74,8 @@ export function Sidebar({ width }: { width: number }) {
   const hasDownloads = useBrowser((s) => downloadsIn(s, windowId).length > 0);
   const dots = useProfileDotsShown();
   const footerDownloads = addressBar && hasDownloads;
-  const footer = dots || footerDownloads ? PROFILE_DOTS_HEIGHT : 0;
+  const personalize = !useIsIncognito();
+  const footer = dots || footerDownloads || personalize ? PROFILE_DOTS_HEIGHT : 0;
   const nothingPinned = useBrowser((s) => sidebarEntries(s, windowId, current).tiles.length === 0);
 
   useRevealTabs(windowId, scroll, scrollY, geometry);
@@ -140,6 +143,28 @@ export function Sidebar({ width }: { width: number }) {
           {footer ? (
             <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: footer }}>
               {dots ? <ProfileDots windowId={windowId} /> : null}
+              {personalize ? (
+                <View
+                  style={{
+                    position: "absolute",
+                    left: layout.sidebarInset + (footerDownloads ? SIDEBAR_FOOTER_DOWNLOADS.size + 2 : (SIDEBAR_FOOTER_DOWNLOADS.size - PERSONALIZE_BUTTON) / 2),
+                    bottom: SIDEBAR_FOOTER_DOWNLOADS.bottom + (SIDEBAR_FOOTER_DOWNLOADS.size - PERSONALIZE_BUTTON) / 2,
+                  }}
+                >
+                  <PersonalizeButton windowId={windowId} />
+                </View>
+              ) : null}
+              {personalize ? (
+                <View
+                  style={{
+                    position: "absolute",
+                    right: layout.sidebarInset + (SIDEBAR_FOOTER_DOWNLOADS.size - PERSONALIZE_BUTTON) / 2,
+                    bottom: SIDEBAR_FOOTER_DOWNLOADS.bottom + (SIDEBAR_FOOTER_DOWNLOADS.size - PERSONALIZE_BUTTON) / 2,
+                  }}
+                >
+                  <NewProfileButton windowId={windowId} />
+                </View>
+              ) : null}
               {footerDownloads ? (
                 <View style={{ position: "absolute", left: layout.sidebarInset, bottom: SIDEBAR_FOOTER_DOWNLOADS.bottom }}>
                   <DownloadsButton windowId={windowId} />
@@ -496,6 +521,19 @@ function useRevealTabs(windowId: string, scroll: RefObject<ScrollView | null>, s
       geometry.current.laidOut = undefined;
     };
   }, [windowId]);
+}
+
+function NewProfileButton({ windowId }: { windowId: string }) {
+  return (
+    <IconButton
+      icon="plus"
+      size={14}
+      box={PERSONALIZE_BUTTON}
+      radius={PERSONALIZE_BUTTON / 2}
+      tooltip="New Profile"
+      onPress={() => void createProfile(windowId).then((id) => id && switchProfile(windowId, id))}
+    />
+  );
 }
 
 function DownloadsButton({ windowId }: { windowId: string }) {

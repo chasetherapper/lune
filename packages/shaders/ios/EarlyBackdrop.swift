@@ -33,6 +33,8 @@ public final class EarlyBackdrop: NSObject {
     if let v = (props["themeGrain"] as? NSNumber)?.doubleValue { theme.grain = v }
     if let v = props["themeAppearance"] as? String { theme.appearance = v }
     if let v = props["themeTexture"] as? String { theme.texture = v }
+    if let v = props["themeMaterial"] as? String { theme.material = v }
+    if let flat = (props["themeGlassTint"] as? [NSNumber])?.map(\.doubleValue) { theme.glassTint = ThemeGradient.parseTint(flat) }
     return theme.isEmpty ? nil : theme
   }
 }

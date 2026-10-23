@@ -40,6 +40,7 @@ import { flushPersistence, resumePersistence } from "./persist";
 import { startWindowCloseGuard } from "./windowClose";
 import { startExtensionsBridge } from "../components/extensions/bridge";
 import { extensionMenu, useExtensions } from "../components/extensions/state";
+import { collapsesToIcons, sidebarToggleTitle } from "../components/layout/iconRail";
 
 let quitting = false;
 export const isQuitting = () => quitting;
@@ -262,6 +263,7 @@ export function menuState(s: BrowserState): MenuState {
     titles.bookmarkPage = "Edit Bookmark…";
   }
 
+  if (collapsesToIcons(s)) titles.toggleSidebar = sidebarToggleTitle(s);
   if (!s.settings.openLinksInLittleArdia) titles.toggleOpenLinksInLittleArdia = "Open Links from Other Apps in Little Ardia";
 
   const sidebar = sidebarMenuState(s, windowId);

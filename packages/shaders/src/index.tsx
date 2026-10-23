@@ -22,6 +22,8 @@ export type WindowBackdropProps = ViewProps & {
   themeGrain?: number;
   themeTexture?: "grain" | "sand" | "denim" | "tweed";
   themeAppearance?: "auto" | "light" | "dark";
+  themeMaterial?: "gradient" | "glass";
+  themeGlassTint?: number[];
 };
 
 const NativeBackdrop = requireNativeViewManager<WindowBackdropProps>("ArdiaWindowBackdrop");
@@ -61,6 +63,10 @@ export type ThemeSwatchProps = ViewProps & {
   grain?: number;
   texture?: "grain" | "sand" | "denim" | "tweed";
   padLightness?: number;
+  ground?: string;
+  blobs?: number[];
+  frost?: string;
+  dots?: string;
 };
 
 const hasThemeSwatch = !!(globalThis as { expo?: { getViewConfig?: (name: string) => unknown } }).expo?.getViewConfig?.("ArdiaThemeSwatch");

@@ -1,29 +1,34 @@
 import { Surface, Symbol } from "@ardia/shell";
-import { useEffect, useRef } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { create } from "zustand";
-import { hex, useTheme } from "../../lib/theme";
-import { PERSONALIZE_COPY, TabLayoutPicker, ThemeColorPicker } from "../onboarding/personalize";
+import { useTheme } from "../../lib/theme";
 import { useHover } from "../primitives";
+import { PersonalizeTheme } from "./PersonalizeTheme";
 
 const INSET = 16;
 const BUTTON = 30;
-const GLYPH_DROP = 1.5;
 
 const usePanel = create<{ windowId: string | null }>(() => ({ windowId: null }));
 const setOpen = (windowId: string | null) => usePanel.setState({ windowId });
+
+export const PERSONALIZE_BUTTON = BUTTON;
+
+export function PersonalizePanelHost({ windowId }: { windowId: string }) {
+  const open = usePanel((s) => s.windowId === windowId);
+  useEffect(() => () => {
+    if (usePanel.getState().windowId === windowId) setOpen(null);
+  }, [windowId]);
+  return open ? <PersonalizePanel windowId={windowId} onClose={() => setOpen(null)} /> : null;
+}
 
 export function PersonalizeButton({ windowId }: { windowId: string }) {
   const theme = useTheme();
   const { hovered, hoverProps } = useHover();
   const open = usePanel((s) => s.windowId === windowId);
-  useEffect(() => () => {
-    if (usePanel.getState().windowId === windowId) setOpen(null);
-  }, [windowId]);
   return (
     <>
-      {open ? <PersonalizePanel windowId={windowId} onClose={() => setOpen(null)} /> : null}
-      <View {...hoverProps} tooltip="Personalize" style={{ position: "absolute", right: INSET, bottom: INSET - GLYPH_DROP }}>
+      <View {...hoverProps} tooltip="Personalize">
         <Pressable onPress={() => setOpen(open ? null : windowId)} accessibilityRole="button" accessibilityLabel="Personalize" accessibilityState={{ expanded: open }}>
           {({ pressed }) => (
             <View
@@ -46,45 +51,38 @@ export function PersonalizeButton({ windowId }: { windowId: string }) {
 }
 
 function PersonalizePanel({ windowId, onClose }: { windowId: string; onClose: () => void }) {
-  const theme = useTheme();
+  const panel = useTheme();
   const t = useRef(new Animated.Value(0)).current;
+  const [room, setRoom] = useState<number | null>(null);
   useEffect(() => {
     Animated.spring(t, { toValue: 1, friction: 9, tension: 90, useNativeDriver: true }).start();
   }, []);
   return (
     <>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close Personalize" />
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} onLayout={(e) => setRoom(e.nativeEvent.layout.height - 2 * INSET)} accessibilityLabel="Close Personalize" />
       <Animated.View
         style={{
           position: "absolute",
-          right: INSET,
-          bottom: INSET + BUTTON + 8,
-          width: 352,
+          left: INSET,
+          bottom: INSET,
+          width: 340,
           opacity: t.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: "clamp" }),
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }, { scale: t.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }],
         }}
       >
         <Surface
-          fill={hex(theme.panel)}
-          cornerRadius={16}
-          borderColor={hex(theme.panelBorder)}
+          fill={panel.dark ? "#1E1D22" : "#FCFBF9F7"}
+          cornerRadius={24}
+          borderColor={panel.dark ? "#FFFFFF1A" : "#1E18281A"}
           borderWidth={0.5}
-          shadowColor="#000000"
-          shadowOpacity={theme.panelShadowOpacity}
-          shadowRadius={24}
-          shadowOffset={[0, 10]}
+          shadowColor="#140F1E"
+          shadowOpacity={panel.dark ? 0.5 : 0.22}
+          shadowRadius={25}
+          shadowOffset={[0, 18]}
         >
-          <View style={{ padding: 18, gap: 16 }}>
-            <View style={{ gap: 4 }}>
-              <Text style={{ fontSize: 15, fontWeight: "600", color: theme.textPrimary }}>{PERSONALIZE_COPY.title}</Text>
-              <Text style={{ fontSize: 12, lineHeight: 17, color: theme.textSecondary }}>{PERSONALIZE_COPY.subtitle}</Text>
-            </View>
-            <ThemeColorPicker windowId={windowId} size={28} />
-            <View style={{ gap: 8 }}>
-              <Text style={{ fontSize: 12, color: theme.textSecondary }}>{PERSONALIZE_COPY.layouts}</Text>
-              <TabLayoutPicker windowId={windowId} />
-            </View>
-          </View>
+          <ScrollView style={{ maxHeight: room ?? undefined }} contentContainerStyle={{ padding: 14 }}>
+            <PersonalizeTheme windowId={windowId} />
+          </ScrollView>
         </Surface>
       </Animated.View>
     </>

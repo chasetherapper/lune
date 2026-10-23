@@ -45,6 +45,8 @@ public class WindowBackdropModule: Module {
       Prop("themeGrain") { (view: WindowBackdropView, v: Double) in view.setCustom { $0.grain = v } }
       Prop("themeTexture") { (view: WindowBackdropView, v: String) in view.setCustom { $0.texture = v } }
       Prop("themeAppearance") { (view: WindowBackdropView, v: String) in view.setCustom { $0.appearance = v } }
+      Prop("themeMaterial") { (view: WindowBackdropView, v: String) in view.setCustom { $0.material = v } }
+      Prop("themeGlassTint") { (view: WindowBackdropView, flat: [Double]) in view.setCustom { $0.glassTint = ThemeGradient.parseTint(flat) } }
     }
   }
 }
@@ -58,6 +60,10 @@ public class ThemeSwatchModule: Module {
       Prop("grain") { (view: ThemeSwatchView, v: Double) in view.setGrain(v) }
       Prop("texture") { (view: ThemeSwatchView, v: String) in view.setTexture(v) }
       Prop("padLightness") { (view: ThemeSwatchView, v: Double) in view.setPadLightness(v) }
+      Prop("ground") { (view: ThemeSwatchView, v: String) in view.setGround(v) }
+      Prop("blobs") { (view: ThemeSwatchView, v: [Double]) in view.setBlobs(v) }
+      Prop("frost") { (view: ThemeSwatchView, v: String) in view.setFrost(v) }
+      Prop("dots") { (view: ThemeSwatchView, v: String) in view.setDots(v) }
     }
   }
 }

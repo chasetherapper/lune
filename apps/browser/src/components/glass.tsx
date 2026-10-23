@@ -1,8 +1,11 @@
 import { GlassEffect, isLiquidGlass } from "@ardia/shell";
 import { memo } from "react";
 import { useTheme, type Theme } from "../lib/theme";
+import { useSettings } from "../store/hooks";
 
 export const liquidGlass = isLiquidGlass();
+
+export const useGlassControls = () => useSettings((s) => s.glassControls) && liquidGlass;
 
 const PROFILE_SHARE = 0.15;
 

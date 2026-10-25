@@ -35,6 +35,7 @@ export const useToolbarTab = (tabId: string | undefined) => useBrowser(useShallo
 
 export const URL_FIELD = { top: 21.2 - 15, height: 30 } as const;
 export const GLYPH = 13;
+export const NAV_GLYPH = { size: 15, weight: "light" } as const;
 export const urlFieldRight = (inSplit: boolean, extensionsWidth: number) => (inSplit ? 12 + 2 * 28 : 12) + extensionsWidth;
 const LOCK = { left: 7, width: 18, gap: 3 } as const;
 export const urlTextLeft = (insecure: boolean) => (insecure ? LOCK.left + LOCK.width + LOCK.gap : 8);
@@ -160,7 +161,7 @@ export const ReloadButton = memo(function ReloadButton({
       style={style}
       palette={palette}
       icon={loading ? "xmark" : "arrow.clockwise"}
-      size={GLYPH}
+      {...NAV_GLYPH}
       hit={hit}
       disabled={!tab.url}
       onPress={(m) => {
@@ -239,8 +240,8 @@ export const HistoryButton = memo(function HistoryButton({
     <MouseArea style={style} onMiddleClick={(e) => !disabled && void onPress({ ...e, middle: true })}>
       <ToolbarButton
         palette={palette}
-        icon={direction < 0 ? "chevron.left" : "chevron.right"}
-        size={GLYPH}
+        icon={direction < 0 ? "arrow.left" : "arrow.right"}
+        {...NAV_GLYPH}
         hit={hit}
         disabled={disabled}
         onPress={onPress}

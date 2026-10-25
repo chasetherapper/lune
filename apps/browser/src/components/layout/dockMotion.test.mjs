@@ -92,19 +92,19 @@ test("the motion flag is per window, and ending it twice is harmless", () => {
 
 test("the toolbar's buttons don't move with the sidebar: the hidden sidebar's toolbar starts at the card's edge, as Dia's", () => {
   const g = toolbarGeometry({ sidebarButton: true });
-  assert.deepEqual([g.sidebarButton, g.back, g.forward, g.reload], [21, 56, 92, 127]);
+  assert.deepEqual([g.sidebarButton, g.back, g.forward, g.reload], [21, 56, 88, 120]);
 });
 
 test("the sidebar's own button (address bar in the sidebar) always fits; back, forward and reload as there's room, never overlapping", () => {
   assert.deepEqual(dm.navButtonsFitting(160).buttons, ["back"]);
   const narrow = dm.navButtonsFitting(190);
   assert.deepEqual(narrow.buttons, ["back", "forward"], "the default width keeps the back and forward pair, as Arc and Dia show it; reload gives way first");
-  assert.equal(narrow.step, 35, "Dia's pitch");
+  assert.equal(narrow.step, 32, "Arc's pitch");
   const closing = dm.navButtonsFitting(220);
   assert.deepEqual(closing.buttons, ["back", "forward", "reload"]);
-  assert.ok(closing.step >= 30 + dm.HEADER_MIN_GAP && closing.step < 35, "closed up, plates apart");
-  assert.deepEqual(dm.navButtonsFitting(224.75), { buttons: ["back", "forward", "reload"], step: 35 });
-  assert.deepEqual(dm.navButtonsFitting(400), { buttons: ["back", "forward", "reload"], step: 35 });
+  assert.ok(closing.step >= 30 + dm.HEADER_MIN_GAP && closing.step <= 32, "closed up, plates apart");
+  assert.deepEqual(dm.navButtonsFitting(224.75), { buttons: ["back", "forward", "reload"], step: 32 });
+  assert.deepEqual(dm.navButtonsFitting(400), { buttons: ["back", "forward", "reload"], step: 32 });
   assert.equal(dm.navButtonsFitting(100).buttons.length, 0);
   for (let w = 150; w <= 400; w += 0.5) {
     const { buttons, step } = dm.navButtonsFitting(w);
@@ -115,7 +115,7 @@ test("the sidebar's own button (address bar in the sidebar) always fits; back, f
 });
 
 test("with the sidebar button hidden (Settings › Tabs), back, forward and reload take its place and all fit at the default width", () => {
-  assert.deepEqual(dm.navButtonsFitting(190, 30, false), { buttons: ["back", "forward", "reload"], step: 35 });
+  assert.deepEqual(dm.navButtonsFitting(190, 30, false), { buttons: ["back", "forward", "reload"], step: 32 });
   assert.deepEqual(dm.navButtonsFitting(150, 30, false).buttons, ["back", "forward"]);
   for (let w = 120; w <= 400; w += 0.5) {
     const { buttons, step } = dm.navButtonsFitting(w, 30, false);

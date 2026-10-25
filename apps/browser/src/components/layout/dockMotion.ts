@@ -59,15 +59,15 @@ export const peekShown = (windowId: string) => peeking.has(windowId);
 export const overPeek = (windowId: string, x: number) => x < (peeking.get(windowId) ?? -Infinity);
 export const devPeeks: Record<string, { show(): void; hide(): void }> = {};
 
-export const HEADER_TOOLS = { toggleX: 70.75 + 27, pitch: 35, edge: 7, lightsRight: 70.75 + 7 } as const;
+export const HEADER_TOOLS = { toggleX: 70.75 + 27, pitch: 32, edge: 7, lightsRight: 70.75 + 7 } as const;
 
 export const HEADER_MIN_GAP = 2;
 
 export type HeaderButton = "back" | "forward" | "reload";
 
 export function navButtonsFitting(width: number, button = 30, toggle = true): { buttons: HeaderButton[]; step: number } {
-  const { toggleX, pitch, edge } = HEADER_TOOLS;
-  const span = width - edge - button / 2 - (toggle ? toggleX : toggleX - pitch);
+  const { toggleX, pitch, edge, lightsRight } = HEADER_TOOLS;
+  const span = width - edge - button / 2 - (toggle ? toggleX : lightsRight - button / 2);
   const count = Math.max(0, Math.min(3, Math.floor(span / (button + HEADER_MIN_GAP))));
   const buttons: HeaderButton[] = count === 3 ? ["back", "forward", "reload"] : count === 2 ? ["back", "forward"] : count === 1 ? ["back"] : [];
   return { buttons, step: count ? Math.min(pitch, span / count) : pitch };

@@ -2,7 +2,7 @@ import { type LinkRoute, routeLinkTabs } from "@ardia/ardiacore";
 import { focus, openWindow } from "../../lib/actions";
 import { routedLinks, type RoutedLinks } from "../../lib/linkRoutes";
 import { runsJavaScript } from "../../lib/scriptUrls";
-import { useBrowser } from "../../store/browser";
+import { useBrowser, type BrowserState } from "../../store/browser";
 import { activeTabId } from "../../store/model";
 import { isSmall, lastActiveProfile, mainWindowFor } from "../../store/small";
 
@@ -76,6 +76,25 @@ export function openInMainWindow(windowId: string) {
   }
   const moved = s.moveTabsToWindow([tab.id], target ?? null);
   if (moved) focus(moved);
+}
+
+export function littleArdiaProfile(s: BrowserState, windowId: string): string | undefined {
+  const tabId = activeTabId(s, windowId);
+  return (tabId ? s.tabs[tabId]?.profileId : undefined) ?? s.windows[windowId]?.profileId;
+}
+
+export function openInProfile(windowId: string, profileId: string) {
+  const s = store();
+  if (!isSmall(s, windowId) || !s.profiles[profileId]) return;
+  if (profileId === littleArdiaProfile(s, windowId)) return openInMainWindow(windowId);
+  const tabId = activeTabId(s, windowId);
+  const url = tabId ? s.tabs[tabId]?.url : undefined;
+  s.closeWindow(windowId);
+  if (url) return openLinksInMainWindow([url], profileId, [undefined]);
+  const target = mainWindowFor(store(), profileId);
+  if (!target) return void openWindow({ profileId });
+  store().switchProfile(target, profileId);
+  focus(target);
 }
 
 export function closeLittleArdia(windowId: string) {

@@ -1,4 +1,3 @@
-import { APP_NAME } from "../../lib/appName";
 import { breadcrumb } from "@ardia/core";
 import { WindowBackdrop } from "@ardia/shaders";
 import { ContextMenuArea, FadeLabel, setTrafficLightsCenter, Symbol, WindowDragRegion } from "@ardia/shell";
@@ -17,7 +16,7 @@ import { setUrlAnchor } from "../layout/windowLayout";
 import { showUrlBarMenu } from "../omnibox/paste";
 import { Favicon, IconButton, useHover } from "../primitives";
 import { copyPageUrl } from "../site/selection";
-import { openInMainWindow } from "./actions";
+import { OpenInButton, ProfilePicker } from "./OpenInProfile";
 
 const SMALL_BAR_HEIGHT = 38;
 const MID = SMALL_BAR_HEIGHT / 2;
@@ -26,10 +25,19 @@ const LIGHTS_CENTER: [number, number] = [20, MID];
 const FIELD_LEFT = 84;
 const FIELD_HEIGHT = 28;
 const BUTTON = 28;
+const BUTTON_GAP = 2;
+const FIELD_GAP = 8;
+const COMPACT_BELOW = 640;
 
 export function LittleArdiaWindow() {
   const theme = useTheme();
+  const windowId = useWindowId();
   const [width, setWidth] = useState(0);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const panelOpen = useWindowUi().panel.open;
+  useEffect(() => {
+    if (panelOpen) setPickerOpen(false);
+  }, [panelOpen]);
   return (
     <View style={{ flex: 1 }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       <WindowBackdrop vibrancy {...theme.backdrop} colors={theme.windowTint} grainOpacity={theme.grain} style={StyleSheet.absoluteFill} />
@@ -37,19 +45,21 @@ export function LittleArdiaWindow() {
         <ContentCard />
       </View>
       <View style={{ position: "absolute", left: 0, right: 0, top: 0 }}>
-        <LittleArdiaBar />
+        <LittleArdiaBar compact={width > 0 && width < COMPACT_BELOW} pickerOpen={pickerOpen} onTogglePicker={() => setPickerOpen((open) => !open)} />
       </View>
+      <ProfilePicker windowId={windowId} open={pickerOpen} top={SMALL_BAR_HEIGHT - 2} right={INSET} onClose={() => setPickerOpen(false)} />
       <CommandPanel windowWidth={width} />
       <DownloadsPopover />
     </View>
   );
 }
 
-function LittleArdiaBar() {
+function LittleArdiaBar({ compact, pickerOpen, onTogglePicker }: { compact: boolean; pickerOpen: boolean; onTogglePicker: () => void }) {
   const windowId = useWindowId();
   const tab = useActiveTab();
   const panelOpen = useWindowUi().panel.open;
   const [copied, setCopied] = useState(false);
+  const [buttonsWidth, setButtonsWidth] = useState(2 * BUTTON + BUTTON_GAP);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => {
     void setTrafficLightsCenter(windowId, LIGHTS_CENTER);
@@ -67,12 +77,15 @@ function LittleArdiaBar() {
   return (
     <View style={{ height: SMALL_BAR_HEIGHT }}>
       <WindowDragRegion style={StyleSheet.absoluteFill} />
-      <View style={{ position: "absolute", left: FIELD_LEFT, right: INSET + 2 * BUTTON + 8, top: MID - FIELD_HEIGHT / 2, height: FIELD_HEIGHT }}>
+      <View style={{ position: "absolute", left: FIELD_LEFT, right: INSET + buttonsWidth + FIELD_GAP, top: MID - FIELD_HEIGHT / 2, height: FIELD_HEIGHT }}>
         {tab ? <PageField tab={tab} windowId={windowId} hidden={panelOpen} /> : null}
       </View>
-      <View style={{ position: "absolute", right: INSET, top: MID - BUTTON / 2, flexDirection: "row", gap: 2 }}>
+      <View
+        onLayout={(e) => setButtonsWidth(e.nativeEvent.layout.width)}
+        style={{ position: "absolute", right: INSET, top: MID - BUTTON / 2, flexDirection: "row", alignItems: "center", gap: BUTTON_GAP }}
+      >
         <IconButton icon={copied ? "checkmark" : "link"} size={14} box={BUTTON} radius={7} disabled={!tab?.url} tooltip="Copy Link (⇧⌘C)" onPress={copy} />
-        <IconButton icon="arrow.up.left.and.arrow.down.right" size={13} box={BUTTON} radius={7} tooltip={`Open in ${APP_NAME} (⌘O)`} onPress={() => openInMainWindow(windowId)} />
+        <OpenInButton windowId={windowId} compact={compact} pickerOpen={pickerOpen} onTogglePicker={onTogglePicker} />
       </View>
     </View>
   );

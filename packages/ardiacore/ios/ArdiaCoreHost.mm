@@ -307,7 +307,7 @@ static NSArray<NSNumber *> *LittleArdiaFrame(id size) {
   screen = screen ?: NSScreen.mainScreen;
   if (!screen) return nil;
   const NSRect visible = screen.visibleFrame;
-  double width = 900, height = 640;
+  double width = 1180, height = 800;
   if ([size isKindOfClass:NSArray.class] && [size count] == 2 && [size[0] isKindOfClass:NSNumber.class] && [size[1] isKindOfClass:NSNumber.class]) {
     width = [size[0] doubleValue];
     height = [size[1] doubleValue];

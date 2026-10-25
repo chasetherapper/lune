@@ -147,3 +147,12 @@ test("the last active profile survives a quit and relaunch", () => {
   assert.equal(lastActiveProfile(S()), "default");
   stub.docs.clear();
 });
+
+test("a Little Ardia size still at the old default opens at the new default, a resized one is kept", async () => {
+  const { LITTLE_ARDIA_SIZE } = await import("./settings.ts");
+  assert.deepEqual(LITTLE_ARDIA_SIZE, [1180, 800]);
+  const hydrated = (littleArdiaSize) => (S().hydrate({ settings: littleArdiaSize ? { littleArdiaSize } : {} }), S().settings.littleArdiaSize);
+  assert.deepEqual(hydrated([900, 640]), LITTLE_ARDIA_SIZE);
+  assert.deepEqual(hydrated([1000, 700]), [1000, 700]);
+  assert.deepEqual(hydrated(undefined), LITTLE_ARDIA_SIZE);
+});

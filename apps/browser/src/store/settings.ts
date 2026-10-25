@@ -74,6 +74,9 @@ export type Settings = {
 
 export const DEFAULT_PROFILE_ID = "default";
 
+export const LITTLE_ARDIA_SIZE: [number, number] = [1180, 800];
+const FIRST_LITTLE_ARDIA_SIZE: [number, number] = [900, 640];
+
 export const DEFAULT_SETTINGS: Settings = {
   warnBeforeQuitting: false,
   warnBeforeClosingWindow: true,
@@ -117,7 +120,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultProfileId: DEFAULT_PROFILE_ID,
   shortcuts: {},
   openLinksInLittleArdia: true,
-  littleArdiaSize: [900, 640],
+  littleArdiaSize: LITTLE_ARDIA_SIZE,
 };
 
 const NO_CUSTOM_ENGINES: CustomSearchEngine[] = [];
@@ -177,7 +180,11 @@ export function choose(settings: Settings, patch: Partial<Settings>): Settings {
   return { ...settings, ...patch, ...(added.length ? { chosen: [...chosen, ...added] } : {}), ...(inferred ? { inferred } : {}) };
 }
 
-export function migrateSavedSettings(saved: (Partial<Settings> & { batterySaver?: unknown }) | undefined): Partial<Settings> | undefined {
+const neverResized = (size: unknown) =>
+  Array.isArray(size) && size.length === 2 && size[0] === FIRST_LITTLE_ARDIA_SIZE[0] && size[1] === FIRST_LITTLE_ARDIA_SIZE[1];
+
+export function migrateSavedSettings(given: (Partial<Settings> & { batterySaver?: unknown }) | undefined): Partial<Settings> | undefined {
+  const saved = given && neverResized(given.littleArdiaSize) ? { ...given, littleArdiaSize: LITTLE_ARDIA_SIZE } : given;
   if (!saved || !("batterySaver" in saved)) return saved;
   const { batterySaver, ...rest } = saved;
   const explicit = batterySaver === false || (batterySaver === true && !!rest.chosen?.includes("batterySaver") && !rest.inferred?.includes("batterySaver"));

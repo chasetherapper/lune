@@ -5,20 +5,22 @@ import { Pressable, Text, View } from "react-native";
 import { useTheme } from "../../lib/theme";
 import { Favicon, IconButton, useHover } from "../primitives";
 
-export function SuggestionIcon({ suggestion: s, color }: { suggestion: Suggestion; color?: string }) {
+export function SuggestionIcon({ suggestion: s, color, size = 16 }: { suggestion: Suggestion; color?: string; size?: number }) {
   const theme = useTheme();
   const tint = color ?? theme.textSecondary;
+  const box = { width: size, height: size };
+  const glyph = (base: number) => Math.round((base * size) / 16);
   switch (s.kind) {
     case "page":
-      return <Favicon url={s.url} favicon={s.favicon} />;
+      return <Favicon url={s.url} favicon={s.favicon} size={size} />;
     case "create":
-      return <Favicon url={`https://${s.site}`} />;
+      return <Favicon url={`https://${s.site}`} size={size} />;
     case "search":
-      return <Symbol name="magnifyingglass" size={13} color={tint} style={{ width: 16, height: 16 }} />;
+      return <Symbol name="magnifyingglass" size={glyph(13)} color={tint} style={box} />;
     case "calc":
-      return <Symbol name="equal.circle" size={14} color={tint} style={{ width: 16, height: 16 }} />;
+      return <Symbol name="equal.circle" size={glyph(14)} color={tint} style={box} />;
     case "action":
-      return <Symbol name={s.icon ?? "command"} size={13} color={tint} style={{ width: 16, height: 16 }} />;
+      return <Symbol name={s.icon ?? "command"} size={glyph(13)} color={tint} style={box} />;
   }
 }
 
@@ -71,7 +73,7 @@ export const SuggestionList = memo(function SuggestionList({
   );
 });
 
-function sameSuggestion(a: Suggestion, b: Suggestion): boolean {
+export function sameSuggestion(a: Suggestion, b: Suggestion): boolean {
   if (a === b) return true;
   const ka = Object.keys(a) as (keyof Suggestion)[];
   return ka.length === Object.keys(b).length && ka.every((k) => a[k] === b[k]);

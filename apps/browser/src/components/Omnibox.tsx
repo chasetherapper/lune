@@ -19,6 +19,8 @@ import { openFromNewTabBar } from "./omnibox/newTabBar";
 import type { NewTabTarget } from "../store/types";
 import { clipboardPasteAction, pasteMenuItem, pasteTarget, readClipboard } from "./omnibox/paste";
 import { ScopeChip } from "./omnibox/ScopeChip";
+import { CommandBarList } from "./omnibox/CommandBarRows";
+import { ProfileChip } from "./omnibox/ProfileChip";
 import { SuggestionIcon, SuggestionList, isRemovable, type RowActions } from "./omnibox/SuggestionRow";
 import { useDropdownStart } from "./omnibox/dropdownStart";
 import { useInlineCompletion } from "./omnibox/useInlineCompletion";
@@ -31,6 +33,11 @@ type Variant = "panel" | "hero" | "sidebar";
 export const PANEL_TEXT_LEFT = 48;
 const PANEL_ICON_LEFT = 21;
 const FIELD_TEXT_INSET = 2.5;
+export const LARGE_INPUT_HEIGHT = 66;
+const LARGE_INPUT_PAD = 22;
+const LARGE_INPUT_GAP = 14;
+const LARGE_GLASS = 20;
+const LARGE_DIVIDER_INSET = 20;
 type Selection = { start: number; end: number };
 
 const BASE_KEYS = [
@@ -59,8 +66,10 @@ export function Omnibox({
   onCancel,
   onDone = onCancel,
   opensTab,
+  large: largeBar = false,
 }: {
   variant: Variant;
+  large?: boolean;
   tabId: string;
   initialText?: string;
   opensTab?: NewTabTarget;
@@ -74,6 +83,7 @@ export function Omnibox({
   const currentUrl = useBrowser((s) => (opensTab ? "" : (s.tabs[tabId]?.url ?? "")));
   const hero = variant === "hero";
   const dropdown = variant === "sidebar";
+  const large = variant === "panel" && largeBar;
 
   const [restored] = useState(() => (hero ? savedNtpQuery(tabId) : null));
   const [typed, setTyped] = useState(restored?.typed ?? initialText);
@@ -365,7 +375,9 @@ export function Omnibox({
 
   const leadingIcon =
     current && (typed || scope) && current.kind !== "search" ? (
-      <SuggestionIcon suggestion={current} color={theme.textPrimary} />
+      <SuggestionIcon suggestion={current} color={theme.textPrimary} size={large ? 18 : 16} />
+    ) : large ? (
+      <Symbol name="magnifyingglass" size={18} weight="medium" color={theme.textPrimary} style={{ width: LARGE_GLASS, height: LARGE_GLASS }} />
     ) : (
       <Symbol name="magnifyingglass" size={15} weight="medium" color={hero ? theme.textSecondary : theme.textPrimary} style={{ width: 18, height: 18 }} />
     );
@@ -422,10 +434,11 @@ export function Omnibox({
       onKeyDown={onKeyDown}
       style={{
         flex: 1,
-        fontSize: hero ? 17 : dropdown ? 14 : 13,
+        fontSize: large ? 22 : hero ? 17 : dropdown ? 14 : 13,
+        letterSpacing: large ? -0.2 : undefined,
         color: theme.textPrimary,
         paddingVertical: 0,
-        marginTop: variant === "panel" ? -3 : 0,
+        marginTop: variant === "panel" && !large ? -3 : 0,
       }}
     />
   );
@@ -448,7 +461,14 @@ export function Omnibox({
     choose: (s) => latest.current.choose(s),
     remove: (url) => useBrowser.getState().removeHistory(latest.current.profileId, [url]),
   }));
-  const suggestionList = (
+  const suggestionList = large ? (
+    items.length ? (
+      <>
+        <View style={{ height: 0.5, marginHorizontal: LARGE_DIVIDER_INSET, backgroundColor: theme.divider }} />
+        <CommandBarList items={items} selectedIndex={selectedIndex} trailing={tabScope ? `Search ${tabScope.name}  ⇥` : null} actions={rowActions} />
+      </>
+    ) : null
+  ) : (
     <SuggestionList
       items={items}
       selectedIndex={selectedIndex}
@@ -509,19 +529,20 @@ export function Omnibox({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            height: hero ? 60 : 55,
-            paddingLeft: hero ? 18 : PANEL_ICON_LEFT,
-            paddingRight: 18,
-            gap: hero ? 8 : PANEL_TEXT_LEFT - FIELD_TEXT_INSET - PANEL_ICON_LEFT - 18,
+            height: large ? LARGE_INPUT_HEIGHT : hero ? 60 : 55,
+            paddingLeft: large ? LARGE_INPUT_PAD : hero ? 18 : PANEL_ICON_LEFT,
+            paddingRight: large ? LARGE_INPUT_PAD : 18,
+            gap: large ? LARGE_INPUT_GAP : hero ? 8 : PANEL_TEXT_LEFT - FIELD_TEXT_INSET - PANEL_ICON_LEFT - 18,
           }}
         >
-          <View style={{ width: 18, alignItems: "center" }}>{leadingIcon}</View>
-          {scope && <ScopeChip scope={scope} large={hero} />}
+          <View style={{ width: large ? LARGE_GLASS : 18, alignItems: "center" }}>{leadingIcon}</View>
+          {scope && <ScopeChip scope={scope} large={hero || large} />}
           {field}
+          {large && <ProfileChip />}
         </View>
       </ContextMenuArea>
       {listAway ? null : suggestionList}
-      {bottomRow}
+      {large ? null : bottomRow}
     </View>
   );
 }

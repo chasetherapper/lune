@@ -1,7 +1,7 @@
 import { OutsidePressArea, Surface } from "@ardia/shell";
 import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { AccessibilityInfo, Animated, Easing, View, type LayoutChangeEvent } from "react-native";
-import { hex, useTheme } from "../lib/theme";
+import { hex, layout, useTheme } from "../lib/theme";
 import { useBrowser } from "../store/browser";
 import { useWindowId, useWindowUi } from "../store/hooks";
 import { activeTabId } from "../store/model";
@@ -9,10 +9,9 @@ import { useStoreWhile } from "../store/tabWatch";
 import { usePage } from "./layout/pageState";
 import { dismissHover, setRowsCovered } from "./sidebar/hover";
 import { useCardAnchors, useUrlAnchors } from "./layout/windowLayout";
-import { barWidth } from "./NewTabPage";
 import { closeNewTabBar } from "./omnibox/newTabBar";
 import type { NewTabTarget } from "../store/types";
-import { Omnibox, PANEL_TEXT_LEFT } from "./Omnibox";
+import { LARGE_INPUT_HEIGHT, Omnibox, PANEL_TEXT_LEFT } from "./Omnibox";
 import { closePanelToHeroBar, type BarDismissal } from "./omnibox/barState";
 import { insecureLevel, URL_FIELD, urlTextLeft } from "./Toolbar";
 
@@ -27,6 +26,10 @@ const DROPDOWN_RADIUS = 12;
 const PANEL_OPEN_HEIGHT = 107;
 const CENTRED_TOP_SHARE = 0.22;
 const CENTRED_START_SCALE = 0.96;
+const CENTRED_WIDTH = 780;
+const CENTRED_SIDE_MARGIN = 14;
+const CENTRED_RADIUS = 20;
+const CENTRED_SHADOW = { radius: 40, offset: 18, opacityScale: 1.3 };
 
 const GROW_MS = 130;
 const GROW_EASING = Easing.out(Easing.exp);
@@ -104,31 +107,62 @@ function panelSurface(theme: ReturnType<typeof useTheme>, radius: number) {
   };
 }
 
+function centredSurface(theme: ReturnType<typeof useTheme>) {
+  return {
+    ...panelSurface(theme, CENTRED_RADIUS),
+    shadowOpacity: Math.min(1, theme.panelShadowOpacity * CENTRED_SHADOW.opacityScale),
+    shadowRadius: CENTRED_SHADOW.radius,
+    shadowOffset: [0, CENTRED_SHADOW.offset] as [number, number],
+  };
+}
+
+const centredBarWidth = (viewWidth: number) => Math.min(CENTRED_WIDTH, viewWidth - 2 * CENTRED_SIDE_MARGIN);
+
+function Backdrop({ card }: { card: Box }) {
+  const theme = useTheme();
+  const [shown] = useState(() => new Animated.Value(reduceMotion ? 1 : 0));
+  useEffect(() => {
+    if (reduceMotion) return;
+    const animation = Animated.timing(shown, { toValue: 1, duration: GROW_MS, easing: GROW_EASING, useNativeDriver: true });
+    animation.start();
+    return () => animation.stop();
+  }, [shown]);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: "absolute", ...card, borderRadius: layout.cardRadius, backgroundColor: theme.commandBarBackdrop, opacity: shown }}
+    />
+  );
+}
+
 function CentredBar({ windowId, tabId, target, card }: { windowId: string; tabId: string; target: NewTabTarget; card: Box }) {
   const theme = useTheme();
-  const width = barWidth(card.width);
+  const width = centredBarWidth(card.width);
   const left = card.left + (card.width - width) / 2;
   const top = card.top + Math.max(WINDOW_MARGIN, Math.round(card.height * CENTRED_TOP_SHARE));
   const from = {
     left: left + (width * (1 - CENTRED_START_SCALE)) / 2,
-    top: top + (PANEL_OPEN_HEIGHT * (1 - CENTRED_START_SCALE)) / 2,
+    top: top + (LARGE_INPUT_HEIGHT * (1 - CENTRED_START_SCALE)) / 2,
     width: width * CENTRED_START_SCALE,
-    height: PANEL_OPEN_HEIGHT * CENTRED_START_SCALE,
+    height: LARGE_INPUT_HEIGHT * CENTRED_START_SCALE,
   };
   const onCancel = () => useBrowser.getState().closePanel(windowId);
   const onDone = () => closeNewTabBar(windowId);
   return (
-    <Grow
-      from={from}
-      frame={{ left, top, width }}
-      openHeight={PANEL_OPEN_HEIGHT}
-      radius={PANEL_RADIUS}
-      surface={panelSurface(theme, PANEL_RADIUS)}
-    >
-      <OutsidePressArea onOutsidePress={onCancel}>
-        <Omnibox key={`newTab:${target.kind}`} variant="panel" tabId={tabId} opensTab={target} onCancel={onCancel} onDone={onDone} />
-      </OutsidePressArea>
-    </Grow>
+    <>
+      <Backdrop card={card} />
+      <Grow
+        from={from}
+        frame={{ left, top, width }}
+        openHeight={LARGE_INPUT_HEIGHT}
+        radius={CENTRED_RADIUS}
+        surface={centredSurface(theme)}
+      >
+        <OutsidePressArea onOutsidePress={onCancel}>
+          <Omnibox key={`newTab:${target.kind}`} variant="panel" large tabId={tabId} opensTab={target} onCancel={onCancel} onDone={onDone} />
+        </OutsidePressArea>
+      </Grow>
+    </>
   );
 }
 

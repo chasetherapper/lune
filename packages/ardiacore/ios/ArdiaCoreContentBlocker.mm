@@ -305,6 +305,14 @@ NSString *const kPrelude =
      "const reloadLists = () => send({what: 'reloadAllFilters'}).then(() => local.remove('ardiaReloadPending'));"
      "const applyLists = (toSelect) => local.set({ardiaReloadPending: true})"
      "  .then(() => send({what: 'applyFilterListSelection', toSelect})).then(reloadLists);"
+     "const userFilters = () => send({what: 'readUserFilters'}).then((u) => {"
+     "  if (!u || typeof u.content !== 'string') throw new Error(`readUserFilters: ${u && u.error || 'no answer'}`);"
+     "  return u;"
+     "});"
+     "const writeUserFilters = (content, trusted) => send({what: 'writeUserFilters', content, enabled: true, trusted}).then((r) => {"
+     "  if (r && r.error) throw new Error(`writeUserFilters: ${r.error}`);"
+     "  return local.set({ardiaReloadPending: true});"
+     "}).then(reloadLists);"
      "const settlePending = () => local.get('ardiaReloadPending').then((b) => b.ardiaReloadPending ? reloadLists() : null);"
      "Promise.resolve().then(() => { if (location.origin !== extensionOrigin) throw new Error(`not the extension page: ${location.href}`); })"
      ".then(() => withDeadline(ready(), 'uBlock Origin'))"
@@ -421,13 +429,15 @@ void Call(NSString *profile, NSString *expression, void (^completion)(id value, 
 }
 
 NSString *const kRead =
-    @"Promise.all([lists(), trusted()]).then(([l, t]) => ({lists: selected(l).sort(), whitelist: [...t.whitelist].sort(), autoUpdate: l.autoUpdate !== false}))";
+    @"Promise.all([lists(), trusted(), userFilters()]).then(([l, t, u]) => ({lists: selected(l).sort(), whitelist: [...t.whitelist].sort(), autoUpdate: l.autoUpdate !== false, userFilters: u.content.trim()}))";
 
 NSString *const kFollow =
-    @"Promise.all([lists(), trusted()]).then(([l, t]) => {"
+    @"Promise.all([lists(), trusted(), userFilters()]).then(([l, t, u]) => {"
      "  const want = %@;"
      "  if (!Array.isArray(want.lists) || !Array.isArray(want.whitelist)) throw new Error('no settings to copy');"
      "  let written = Promise.resolve(null);"
+     "  if (typeof want.userFilters === 'string' && want.userFilters !== u.content.trim())"
+     "    written = written.then(() => writeUserFilters(want.userFilters, u.trusted === true));"
      "  if (!sameSet(selected(l), want.lists))"
      "    written = written.then(() => applyLists(want.lists));"
      "  if (!sameSet(t.whitelist, want.whitelist))"
@@ -818,6 +828,24 @@ void LoadContentBlocker(NSString *profile) {
                       "  return send({what: 'setWhitelist', whitelist: (allowed ? kept.concat([host]) : kept).join('\\n')});"
                       "})";
   Call(kProfile, ScriptWith(script, @[ @(allowed), host.lowercaseString ]), ^(id, NSString *error) {
+    Changed(error, completion);
+  });
+}
+
++ (void)userFilters:(void (^)(NSString *, NSString *))completion {
+  completion = [completion copy];
+  if (!gDefaultSettled && ArdiaCoreHost.isStarted) return WhenDefaultSettled(^{ [self userFilters:completion]; });
+  Call(kProfile, @"userFilters().then((u) => u.content)", ^(id filters, NSString *error) {
+    if (error) return completion(nil, error);
+    completion([filters isKindOfClass:NSString.class] ? filters : @"", nil);
+  });
+}
+
++ (void)setUserFilters:(NSString *)filters completion:(void (^)(NSString *))completion {
+  completion = [completion copy];
+  if (!gDefaultSettled && ArdiaCoreHost.isStarted) return WhenDefaultSettled(^{ [self setUserFilters:filters completion:completion]; });
+  NSString *script = @"userFilters().then((u) => writeUserFilters(%@, u.trusted === true)).then(() => null)";
+  Call(kProfile, ScriptWith(script, @[ filters ]), ^(id, NSString *error) {
     Changed(error, completion);
   });
 }

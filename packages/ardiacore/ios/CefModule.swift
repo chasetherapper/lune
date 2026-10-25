@@ -121,6 +121,14 @@ public class CefModule: Module {
     AsyncFunction("setContentBlockerAllowed") { (host: String, allowed: Bool, promise: Promise) in
       ArdiaCoreContentBlocker.setAllowed(allowed, host: host) { CefModule.settle(promise, $0) }
     }.runOnQueue(.main)
+    AsyncFunction("getContentBlockerUserFilters") { (promise: Promise) in
+      ArdiaCoreContentBlocker.userFilters { filters, error in
+        if let error { promise.reject("ERR_CONTENT_BLOCKER", error) } else { promise.resolve(filters ?? "") }
+      }
+    }.runOnQueue(.main)
+    AsyncFunction("setContentBlockerUserFilters") { (filters: String, promise: Promise) in
+      ArdiaCoreContentBlocker.setUserFilters(filters) { CefModule.settle(promise, $0) }
+    }.runOnQueue(.main)
     AsyncFunction("devContentBlockerFailNextMessage") { ArdiaCoreContentBlocker.devFailNextMessage() }.runOnQueue(.main)
     AsyncFunction("devContentBlockerDelayNextLoad") { (ms: Double) in ArdiaCoreContentBlocker.devDelayNextLoad(ms) }.runOnQueue(.main)
 

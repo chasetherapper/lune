@@ -182,6 +182,11 @@ const ROWS: Record<SettingsPane, Section[]> = {
           description: "Block common components found across the web by using additional rules and filters.",
           keywords: ["filter lists", "annoyances", "malware", "regional", "ad block settings"],
         },
+        myFilters: {
+          title: "My filters",
+          description: "Your own rules for hiding page elements or blocking requests.",
+          keywords: ["custom filters", "hide element", "cosmetic filter", "ublock", "user filters", "custom rules"],
+        },
       },
     },
     {

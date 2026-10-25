@@ -29,6 +29,7 @@ import { Button, Checkbox, Group, PopUp, Row, SectionHeader, Sheet, Toggle } fro
 import { appLinks, contentBlocker, siteOrigins, zoomLevels } from "../paneData";
 import { useResource } from "../resources";
 import { closeSettingsSheet, showSettingsSheet } from "../sheet";
+import { MyFiltersSheet } from "./MyFilters";
 import { ShareDiagnosticsSection } from "./ShareDiagnostics";
 
 const CATEGORIES: { id: FilterListCategory; toggle: string; section: string; anchor?: string }[] = [
@@ -95,6 +96,9 @@ export function PrivacyPane() {
         ))}
         <Row anchor="privacy.filterLists">
           <Button title="Advanced…" disabled={!blocker} onPress={() => showSettingsSheet(<FilterListsSheet />)} />
+        </Row>
+        <Row anchor="privacy.myFilters">
+          <Button title="Edit…" disabled={!blocker} onPress={() => showSettingsSheet(<MyFiltersSheet onSaved={refresh} />)} />
         </Row>
       </Group>
 

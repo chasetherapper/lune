@@ -74,6 +74,8 @@ export const Cef = requireNativeModule<{
   setFilterListEnabled(id: string, enabled: boolean): Promise<void>;
   isContentBlockerAllowed(host: string): Promise<boolean>;
   setContentBlockerAllowed(host: string, allowed: boolean): Promise<void>;
+  getContentBlockerUserFilters(): Promise<string>;
+  setContentBlockerUserFilters(filters: string): Promise<void>;
 
   setSiteSetting(profile: string, origin: string, type: SiteSettingType, value: SiteSettingValue): Promise<void>;
   getSiteSettings(profile: string, origin: string): Promise<SiteSettings>;

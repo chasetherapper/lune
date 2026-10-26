@@ -403,7 +403,7 @@ function PageRows({ windowId, profileId, current, rows, lazy, offScreen, tiles, 
             controller?.regions.set("pinnedGroups", v);
           }}
           onLayout={geometry ? (e) => void (geometry.current.regions.pinnedGroups = e.nativeEvent.layout.y) : undefined}
-          style={{ marginTop: tiles.length ? 6 : 0, gap: layout.rowGap }}
+          style={{ marginTop: tiles.length ? 10 : 0, gap: layout.rowGap }}
         >
           {(offScreen ? NONE : pinnedRows).map((id) => (
             <TabRowItem key={id} tabId={id} section="pinnedRows" />

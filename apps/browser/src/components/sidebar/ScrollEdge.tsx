@@ -3,7 +3,7 @@ import { Animated, Easing } from "react-native";
 import { HOVER_CARD_FADE_CURVE } from "./hoverMotion";
 import { useSidebarTokens } from "./tokens";
 
-export const SCROLL_EDGE = { gap: 4, line: 1, inset: 1 } as const;
+export const SCROLL_EDGE = { gap: 8, line: 1, inset: 1 } as const;
 const FADE = { duration: 100, easing: Easing.bezier(...HOVER_CARD_FADE_CURVE) };
 
 export function scrolledPastTop(offset: number): boolean {

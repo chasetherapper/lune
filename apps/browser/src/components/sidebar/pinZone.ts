@@ -1,4 +1,4 @@
-export const TILE_GAP = 6;
+export const TILE_GAP = 8;
 export const MIN_TILE = 50;
 export const PIN_ZONE_HYSTERESIS = 6;
 

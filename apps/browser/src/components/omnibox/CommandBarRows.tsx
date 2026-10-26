@@ -7,13 +7,13 @@ import { IconButton, useHover } from "../primitives";
 import { sectionLabels } from "./sections";
 import { SuggestionIcon, isRemovable, sameSuggestion, type RowActions } from "./SuggestionRow";
 
-const ROW_HEIGHT = 46;
-const ROW_RADIUS = 11;
+const ROW_HEIGHT = 40;
+const ROW_RADIUS = 10;
 const ROW_PAD = 12;
-const ROW_GAP = 14;
-const TILE = 30;
-const TILE_RADIUS = 8;
-const ICON = 18;
+const ROW_GAP = 12;
+const TILE = 26;
+const TILE_RADIUS = 7;
+const ICON = 16;
 const ACTION_SHIFT = -6;
 const ACTION_FADE_MS = 140;
 const ACTION_SLIDE_MS = 180;
@@ -82,8 +82,8 @@ export const CommandBarList = memo(function CommandBarList({
 function SectionLabel({ title }: { title: string }) {
   const theme = useTheme();
   return (
-    <View style={{ height: 28, justifyContent: "flex-end", paddingHorizontal: ROW_PAD, paddingBottom: 6 }}>
-      <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: "600", letterSpacing: 0.4, textTransform: "uppercase", color: theme.textTertiary }}>
+    <View style={{ height: 26, justifyContent: "flex-end", paddingHorizontal: ROW_PAD, paddingBottom: 5 }}>
+      <Text numberOfLines={1} style={{ fontSize: 11.5, fontWeight: "500", color: theme.textTertiary }}>
         {title}
       </Text>
     </View>
@@ -159,16 +159,16 @@ const CommandBarRow = memo(
                 <SuggestionIcon suggestion={s} size={ICON} />
               </Surface>
               <View style={{ flex: 1, minWidth: 0, flexDirection: "row", alignItems: "baseline", gap: 8, overflow: "hidden" }}>
-                <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 15, fontWeight: selected ? "500" : "400", color: theme.textPrimary }}>
+                <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 14, letterSpacing: -0.15, color: theme.textPrimary }}>
                   {title}
                 </Text>
                 {sub ? (
-                  <Text numberOfLines={1} style={{ flexShrink: 0, maxWidth: "45%", fontSize: 13, color: theme.textTertiary }}>
+                  <Text numberOfLines={1} style={{ flexShrink: 0, maxWidth: "45%", fontSize: 12.5, color: theme.textTertiary }}>
                     {sub}
                   </Text>
                 ) : null}
               </View>
-              {trailing ? <Text style={{ fontSize: 13, color: theme.textTertiary }}>{trailing}</Text> : null}
+              {trailing ? <Text style={{ fontSize: 12, color: theme.textTertiary }}>{trailing}</Text> : null}
               <Animated.View
                 pointerEvents="none"
                 style={{
@@ -181,7 +181,7 @@ const CommandBarRow = memo(
               >
                 {trailing ? null : (
                   <>
-                    <Text style={{ fontSize: 13, fontWeight: "500", color: theme.textPrimary }}>{actionLabel}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "500", color: theme.textSecondary }}>{actionLabel}</Text>
                     <Surface
                       fill={hex(theme.panel)}
                       cornerRadius={6}
@@ -191,9 +191,9 @@ const CommandBarRow = memo(
                       shadowOpacity={0.12}
                       shadowRadius={1}
                       shadowOffset={[0, 1]}
-                      style={{ width: 24, height: 22, alignItems: "center", justifyContent: "center" }}
+                      style={{ width: 22, height: 20, alignItems: "center", justifyContent: "center" }}
                     >
-                      <Text style={{ fontSize: 12, color: theme.textPrimary }}>{key}</Text>
+                      <Text style={{ fontSize: 11, color: theme.textSecondary }}>{key}</Text>
                     </Surface>
                   </>
                 )}

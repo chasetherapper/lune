@@ -33,9 +33,9 @@ type Variant = "panel" | "hero" | "sidebar";
 export const PANEL_TEXT_LEFT = 48;
 const PANEL_ICON_LEFT = 21;
 const FIELD_TEXT_INSET = 2.5;
-export const LARGE_INPUT_HEIGHT = 66;
+export const LARGE_INPUT_HEIGHT = 58;
 const LARGE_INPUT_PAD = 22;
-const LARGE_INPUT_GAP = 14;
+const LARGE_INPUT_GAP = 12;
 const LARGE_GLASS = 20;
 const LARGE_DIVIDER_INSET = 20;
 type Selection = { start: number; end: number };
@@ -377,7 +377,7 @@ export function Omnibox({
     current && (typed || scope) && current.kind !== "search" ? (
       <SuggestionIcon suggestion={current} color={theme.textPrimary} size={large ? 18 : 16} />
     ) : large ? (
-      <Symbol name="magnifyingglass" size={18} weight="medium" color={theme.textPrimary} style={{ width: LARGE_GLASS, height: LARGE_GLASS }} />
+      <Symbol name="magnifyingglass" size={16} weight="regular" color={theme.textSecondary} style={{ width: LARGE_GLASS, height: LARGE_GLASS }} />
     ) : (
       <Symbol name="magnifyingglass" size={15} weight="medium" color={hero ? theme.textSecondary : theme.textPrimary} style={{ width: 18, height: 18 }} />
     );
@@ -434,8 +434,8 @@ export function Omnibox({
       onKeyDown={onKeyDown}
       style={{
         flex: 1,
-        fontSize: large ? 22 : hero ? 17 : dropdown ? 14 : 13,
-        letterSpacing: large ? -0.2 : undefined,
+        fontSize: large ? 19 : hero ? 17 : dropdown ? 14 : 13,
+        letterSpacing: large ? -0.3 : undefined,
         color: theme.textPrimary,
         paddingVertical: 0,
         marginTop: variant === "panel" && !large ? -3 : 0,

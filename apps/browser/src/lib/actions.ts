@@ -43,6 +43,20 @@ export async function closeTab(tabId: string) {
   store().closeTab(tabId);
 }
 
+export async function closeOrUnpinTab(tabId: string) {
+  const tab = store().tabs[tabId];
+  if (!tab) return;
+  if (!tab.pinned || !tab.unloaded) return closeTab(tabId);
+  const name = tab.customTitle || tab.title;
+  const { confirmed } = await confirm({
+    title: name ? `Unpin “${name}”?` : "Unpin this tab?",
+    message: "It moves out of your pinned tabs and into your tab list.",
+    confirmTitle: "Unpin",
+    windowId: tab.windowId,
+  });
+  if (confirmed && store().tabs[tabId]?.pinned) store().togglePin(tabId);
+}
+
 export function toggleMute(tabId: string) {
   const tab = store().tabs[tabId];
   if (!tab) return;
